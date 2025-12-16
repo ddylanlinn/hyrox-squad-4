@@ -1,6 +1,6 @@
 # Hyrox Squad 4
 
-A workout tracking app for Hyrox training built with React, TypeScript, and Vite.
+A workout tracking app for Hyrox training built with Vue, TypeScript, and Vite.
 
 ## Features
 
@@ -12,8 +12,8 @@ A workout tracking app for Hyrox training built with React, TypeScript, and Vite
 
 ## Tech Stack
 
-- React 19
+- Vue 3
 - TypeScript
 - Vite 6
 - Tailwind CSS v4
-- Lucide React
+- Lucide Vue Next
