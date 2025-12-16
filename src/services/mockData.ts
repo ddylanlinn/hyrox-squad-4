@@ -1,4 +1,4 @@
-import { DailyStats, User, Mission } from "../types";
+import { DailyStats, User } from "../types";
 
 export const CURRENT_USER_ID = "u1";
 
@@ -8,11 +8,6 @@ export const USERS: User[] = [
   { id: "u3", name: "Sylvi", initials: "SB" },
   { id: "u4", name: "Andrew", initials: "AC" },
 ];
-
-export const TODAY_MISSION: Mission = {
-  title: "WOD: The Engine Builder",
-  description: "Run 5k (Zone 2) + 100 Wall Balls (20/14lb). For Time.",
-};
 
 // Generate last 80 days of history
 export const generateHistory = (): DailyStats[] => {

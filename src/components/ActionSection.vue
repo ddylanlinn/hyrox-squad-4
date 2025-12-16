@@ -2,44 +2,19 @@
   <div
     class="w-full px-5 pb-8 pt-4 bg-gradient-to-t from-white via-white to-transparent"
   >
-    <!-- WOD Card -->
-    <div class="action-card rounded-2xl p-5 mb-6 relative group">
-      <template v-if="!isEditing">
-        <div
-          class="absolute top-4 right-4 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-        >
-          <button @click="isEditing = true" class="edit-button">
-            <Pencil :size="16" />
-          </button>
-        </div>
-        <div class="flex items-center gap-4">
-          <div class="action-icon-bg">
-            <Dumbbell :size="24" />
-          </div>
-          <div>
-            <h3 class="text-primary font-bold text-lg leading-tight pr-8">
-              {{ mission.title }}
-            </h3>
-          </div>
-        </div>
-      </template>
-      <div v-else class="flex flex-col gap-3">
-        <div class="flex justify-between items-center mb-1">
-          <span class="text-xs font-bold text-tertiary uppercase"
-            >Edit Workout</span
-          >
-          <button @click="handleSave" class="save-button">Save</button>
-        </div>
-        <input
-          type="text"
-          v-model="editContent"
-          class="input-content"
-          placeholder="Today's Workout (e.g., 5k Run + 100 Burpees)"
-        />
-      </div>
+    <!-- Note Input Card -->
+    <div v-if="!isCompleted" class="note-card rounded-2xl p-5 mb-6">
+      <label class="block text-xs font-bold text-tertiary uppercase mb-3">
+        Today's Workout
+      </label>
+      <input
+        v-model="noteContent"
+        type="text"
+        class="note-input"
+        placeholder="e.g., 5k Run + 100 Wall Balls"
+      />
     </div>
-
-    <!-- Main Action Button -->
+    <!-- Main Action Section -->
     <div v-if="!isCompleted" class="sticky bottom-6">
       <input
         ref="fileInputRef"
@@ -50,7 +25,7 @@
         @change="handleFileChange"
       />
       <button
-        @click="fileInputRef?.click()"
+        @click="handleCheckInClick"
         :disabled="loading"
         class="checkin-button"
       >
@@ -88,20 +63,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
-import {
-  Camera,
-  Copy,
-  Dumbbell,
-  Loader2,
-  Check,
-  Pencil,
-  Save,
-} from "lucide-vue-next";
-import type { Mission } from "../types";
+import { ref } from "vue";
+import { Camera, Copy, Loader2, Check } from "lucide-vue-next";
 
 interface Props {
-  mission: Mission;
   isCompleted: boolean;
   completedCount: number;
 }
@@ -109,33 +74,36 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  "check-in": [file: File];
-  "update-mission": [mission: Mission];
+  "check-in": [data: { file: File; note: string }];
 }>();
 
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const loading = ref(false);
 const copied = ref(false);
+const noteContent = ref("");
 
-// Edit State
-const isEditing = ref(false);
-const editContent = ref(props.mission.title);
+const handleCheckInClick = () => {
+  const confirmMessage = noteContent.value
+    ? `Ready to check in?\n\nWorkout: ${noteContent.value}`
+    : "Ready to check in?\n\n(Tip: Add your workout details above)";
 
-// Watch for mission changes to update edit state
-watch(
-  () => props.mission,
-  (newMission) => {
-    editContent.value = newMission.title;
+  if (confirm(confirmMessage)) {
+    fileInputRef.value?.click();
   }
-);
+};
 
 const handleFileChange = (e: Event) => {
   const target = e.target as HTMLInputElement;
   if (target.files && target.files[0]) {
     loading.value = true;
     setTimeout(() => {
-      emit("check-in", target.files![0]);
+      emit("check-in", {
+        file: target.files![0],
+        note: noteContent.value || "Done! Let's go squad!",
+      });
       loading.value = false;
+      // Clear note after successful check-in
+      noteContent.value = "";
     }, 1500);
   }
 };
@@ -152,82 +120,40 @@ const handleNudge = () => {
       ? "Squad goal achieved! 💪"
       : messages[Math.floor(Math.random() * messages.length)];
 
-  navigator.clipboard.writeText(`${props.mission.title}\n\n${msg}`);
+  navigator.clipboard.writeText(`Daily Training Check-in\n\n${msg}`);
   copied.value = true;
   setTimeout(() => {
     copied.value = false;
   }, 2000);
 };
-
-const handleSave = () => {
-  emit("update-mission", {
-    title: editContent.value,
-    description: "",
-  });
-  isEditing.value = false;
-};
 </script>
 
 <style scoped>
-/* ========== Card Styles ========== */
-.action-card {
+/* ========== Note Card ========== */
+.note-card {
   background-color: var(--color-action-card-bg);
   border: 1px solid var(--color-action-card-border);
   box-shadow: var(--shadow-card);
 }
 
-/* ========== Edit Button ========== */
-.edit-button {
-  padding: 0.5rem;
-  color: var(--color-text-tertiary);
-  border-radius: 9999px;
-  transition: all 0.2s;
-}
-
-.edit-button:hover {
-  color: var(--color-neutral-600);
-  background-color: var(--color-neutral-50);
-}
-
-/* ========== Icon Background ========== */
-.action-icon-bg {
-  padding: 0.75rem;
-  background-color: var(--color-action-icon-bg);
-  border-radius: 0.75rem;
-  color: var(--color-action-icon-text);
-  flex-shrink: 0;
-}
-
-/* ========== Save Button ========== */
-.save-button {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  background-color: var(--color-action-button-bg);
-  color: var(--color-action-button-text);
-  padding: 0.375rem 0.75rem;
-  border-radius: 9999px;
-}
-
-/* ========== Input Styles ========== */
-.input-content {
+.note-input {
   width: 100%;
-  font-weight: 700;
-  font-size: 1.125rem;
-  border-bottom: 1px solid var(--color-border);
+  font-weight: 600;
+  font-size: 1rem;
+  border-bottom: 2px solid var(--color-border);
   outline: none;
-  padding: 0.25rem 0;
+  padding: 0.5rem 0;
   background-color: transparent;
   color: var(--color-text-primary);
+  transition: border-color 0.2s;
 }
 
-.input-content::placeholder {
+.note-input::placeholder {
   color: var(--color-neutral-300);
+  font-weight: 400;
 }
 
-.input-content:focus {
+.note-input:focus {
   border-bottom-color: var(--color-action-input-focus);
 }
 

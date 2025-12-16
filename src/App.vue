@@ -16,11 +16,9 @@
 
     <!-- Section C: Action -->
     <ActionSection
-      :mission="mission"
       :isCompleted="isCompleted"
       :completedCount="todaysRecords.length"
       @check-in="handleCheckIn"
-      @update-mission="handleUpdateMission"
     />
 
     <!-- Section D: Modal -->
@@ -42,11 +40,10 @@ import PhotoModal from "./components/PhotoModal.vue";
 import {
   generateHistory,
   getStreakCount,
-  TODAY_MISSION,
   USERS,
   CURRENT_USER_ID,
 } from "./services/mockData";
-import type { WorkoutRecord, DailyStats, Mission } from "./types";
+import type { WorkoutRecord, DailyStats } from "./types";
 
 // State
 const history = ref<DailyStats[]>([]);
@@ -54,7 +51,6 @@ const todaysRecords = ref<WorkoutRecord[]>([]);
 const streak = ref(0);
 const modalOpen = ref(false);
 const selectedRecord = ref<WorkoutRecord | null>(null);
-const mission = ref<Mission>(TODAY_MISSION);
 
 // Computed
 const currentUserRecord = computed(() =>
@@ -87,14 +83,14 @@ onMounted(() => {
 });
 
 // Handlers
-const handleCheckIn = (file: File) => {
-  const objectUrl = URL.createObjectURL(file);
+const handleCheckIn = (data: { file: File; note: string }) => {
+  const objectUrl = URL.createObjectURL(data.file);
 
   const newRecord: WorkoutRecord = {
     userId: CURRENT_USER_ID,
     completedAt: new Date().toISOString(),
     imageUrl: objectUrl,
-    note: "Done! Let's go squad!",
+    note: data.note,
   };
 
   todaysRecords.value = [...todaysRecords.value, newRecord];
@@ -107,10 +103,6 @@ const handleAvatarClick = (record: WorkoutRecord) => {
   console.log("🚀 ~ handleAvatarClick ~ record:", record);
   selectedRecord.value = record;
   modalOpen.value = true;
-};
-
-const handleUpdateMission = (newMission: Mission) => {
-  mission.value = newMission;
 };
 </script>
 
