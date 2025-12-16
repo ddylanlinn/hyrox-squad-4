@@ -1,57 +1,72 @@
 <template>
   <div class="w-full px-5 pt-8 pb-4">
-    <!-- Top Section: Streak -->
-    <div class="flex justify-between items-center mb-6">
-      <div>
+    <!-- Top Section: Countdown & Streak -->
+    <div class="flex justify-between items-start mb-6 gap-4">
+      <!-- Race Countdown -->
+      <div class="flex-1">
         <h2
-          class="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-1"
+          class="text-secondary text-xs font-bold uppercase tracking-widest mb-1"
         >
-          Current Streak
+          Race Countdown
         </h2>
         <div class="flex items-baseline gap-2">
           <span
-            class="text-6xl font-black text-zinc-900 tracking-tighter leading-none"
+            class="text-5xl font-black text-primary tracking-tighter leading-none"
+            >{{ daysUntilRace }}</span
+          >
+          <span class="text-secondary font-medium text-base">Days</span>
+        </div>
+        <p class="text-xs text-tertiary mt-1">Until HYROX 2026/02/28</p>
+      </div>
+
+      <!-- Current Streak -->
+      <div class="flex-1 text-right">
+        <h2
+          class="text-secondary text-xs font-bold uppercase tracking-widest mb-1"
+        >
+          Current Streak
+        </h2>
+        <div class="flex items-baseline gap-2 justify-end">
+          <Flame
+            :size="20"
+            :class="streak > 0 ? 'streak-active' : 'streak-inactive'"
+          />
+          <span
+            class="text-5xl font-black text-primary tracking-tighter leading-none"
             >{{ streak }}</span
           >
-          <span class="text-zinc-500 font-medium text-lg">Days</span>
+          <span class="text-secondary font-medium text-base">Days</span>
         </div>
-      </div>
-      <div
-        :class="[
-          'p-4 rounded-full',
-          streak > 0
-            ? 'bg-orange-100 text-orange-500'
-            : 'bg-gray-100 text-gray-400',
-        ]"
-      >
-        <Flame :size="32" :class="streak > 0 ? 'fill-orange-500' : ''" />
       </div>
     </div>
 
-    <!-- Grid: Last 70 days. Using grid-cols-10 for a denser look. -->
+    <!-- Grid: 80 days countdown to race day (D-79 to D-0) -->
     <div class="w-full">
-      <div class="grid grid-cols-10 gap-1.5 w-full">
+      <div class="grid grid-cols-16 gap-0.5 w-full">
         <div
-          v-for="day in history.slice(-70)"
+          v-for="(day, index) in displayHistory"
           :key="day.date"
           :class="[
-            'aspect-square rounded-sm transition-all duration-300 hover:scale-125 hover:z-10 hover:shadow-md',
+            'aspect-square rounded-sm transition-all duration-300 hover:scale-110 hover:z-10 hover:shadow-md relative',
             getColorClass(day.count),
+            isToday(day.date) ? 'today-ring' : '',
           ]"
-          :title="`${day.date}: ${day.count} squad members`"
-        />
-      </div>
-
-      <div class="flex justify-between mt-2 px-1">
-        <span class="text-[10px] text-zinc-400 font-medium">10 weeks ago</span>
-        <span class="text-[10px] text-zinc-400 font-medium">Today</span>
+        >
+          <div
+            v-if="index === displayHistory.length - 1"
+            class="absolute inset-0 flex items-center justify-center"
+          >
+            <Zap :size="16" class="race-icon" fill="currentColor" />
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Flame } from "lucide-vue-next";
+import { computed } from "vue";
+import { Flame, Zap } from "lucide-vue-next";
 import type { DailyStats } from "../types";
 
 interface Props {
@@ -60,22 +75,130 @@ interface Props {
   streak: number;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
+
+// Race date: 2026/02/28
+const RACE_DATE = new Date("2026-02-28");
+
+// Calculate days until race
+const daysUntilRace = computed(() => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const raceDay = new Date(RACE_DATE);
+  raceDay.setHours(0, 0, 0, 0);
+  const diff = raceDay.getTime() - today.getTime();
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+});
+
+// Generate 80 days of history ending at race day (D-79 to D-0)
+const displayHistory = computed(() => {
+  const result: DailyStats[] = [];
+  const raceDay = new Date(RACE_DATE);
+
+  // Generate 79 days: from D-79 to D-1
+  for (let i = 79; i >= 1; i--) {
+    const d = new Date(raceDay);
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split("T")[0];
+
+    // Find matching history data or create empty
+    const existingDay = props.history.find((h) => h.date === dateStr);
+    result.push(
+      existingDay || {
+        date: dateStr,
+        count: 0,
+        records: [],
+      }
+    );
+  }
+
+  // Add race day itself as the 80th item (D-0)
+  result.push({
+    date: RACE_DATE.toISOString().split("T")[0],
+    count: 0,
+    records: [],
+  });
+
+  return result;
+});
+
+// Check if a date is today
+const isToday = (dateStr: string): boolean => {
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
+  return dateStr === todayStr;
+};
 
 const getColorClass = (count: number): string => {
   switch (count) {
     case 0:
-      return "bg-gray-200";
+      return "heatmap-empty";
     case 1:
-      return "bg-green-200";
+      return "heatmap-level-1";
     case 2:
-      return "bg-green-400";
+      return "heatmap-level-2";
     case 3:
-      return "bg-green-600";
+      return "heatmap-level-3";
     case 4:
-      return "bg-lime-500 shadow-[0_0_8px_rgba(132,204,22,0.6)]"; // Neon glow
+      return "heatmap-level-4";
     default:
-      return "bg-gray-200";
+      return "heatmap-empty";
   }
 };
 </script>
+
+<style scoped>
+/* ========== Heatmap Colors ========== */
+.heatmap-empty {
+  background-color: var(--color-heatmap-empty);
+}
+
+.heatmap-level-1 {
+  background-color: var(--color-heatmap-level-1);
+}
+
+.heatmap-level-2 {
+  background-color: var(--color-heatmap-level-2);
+}
+
+.heatmap-level-3 {
+  background-color: var(--color-heatmap-level-3);
+}
+
+.heatmap-level-4 {
+  background-color: var(--color-heatmap-level-4);
+}
+
+/* ========== Today's Date Ring ========== */
+.today-ring {
+  box-shadow: 0 0 0 1px white, 0 0 0 3px var(--color-heatmap-today-ring);
+}
+
+/* ========== Race Day Icon ========== */
+.race-icon {
+  color: var(--color-heatmap-race-icon);
+}
+
+/* ========== Streak Colors ========== */
+.streak-active {
+  color: var(--color-streak-active);
+  fill: var(--color-streak-active);
+}
+
+.streak-inactive {
+  color: var(--color-streak-inactive);
+}
+
+/* ========== Text Colors ========== */
+.text-primary {
+  color: var(--color-text-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-tertiary {
+  color: var(--color-text-tertiary);
+}
+</style>

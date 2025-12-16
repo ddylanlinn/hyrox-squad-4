@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="flex flex-col min-h-[100dvh] max-w-md mx-auto bg-white shadow-2xl overflow-hidden relative"
-  >
+  <div class="app-container">
     <!-- Section A: History -->
     <HistoryHeatmap
       :history="history"
@@ -79,10 +77,10 @@ onMounted(() => {
   // For MVP demo, we start empty or with some dummy data if we wanted
   const dummyToday: WorkoutRecord[] = [
     {
-      userId: "u2", // Alex
+      userId: "u2",
       completedAt: new Date().toISOString(),
       imageUrl: "https://picsum.photos/400/600?random=1",
-      note: "Dying after those wall balls 🥵",
+      note: "Dying after those wall balls",
     },
   ];
   todaysRecords.value = dummyToday;
@@ -106,6 +104,7 @@ const handleCheckIn = (file: File) => {
 };
 
 const handleAvatarClick = (record: WorkoutRecord) => {
+  console.log("🚀 ~ handleAvatarClick ~ record:", record);
   selectedRecord.value = record;
   modalOpen.value = true;
 };
@@ -114,3 +113,18 @@ const handleUpdateMission = (newMission: Mission) => {
   mission.value = newMission;
 };
 </script>
+
+<style scoped>
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  max-width: 28rem; /* 448px = max-w-md */
+  margin-left: auto;
+  margin-right: auto;
+  background-color: var(--color-background);
+  box-shadow: var(--shadow-2xl);
+  overflow: hidden;
+  position: relative;
+}
+</style>

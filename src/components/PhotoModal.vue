@@ -1,15 +1,9 @@
 <template>
   <Teleport to="body">
     <Transition name="fade">
-      <div
-        v-if="isOpen && record && user"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md"
-      >
+      <div v-if="isOpen && record && user" class="modal-overlay">
         <!-- Close Button -->
-        <button
-          @click="emit('close')"
-          class="absolute top-6 right-6 z-10 p-2 bg-zinc-800/50 rounded-full text-white backdrop-blur-sm"
-        >
+        <button @click="emit('close')" class="modal-close-button">
           <X :size="24" />
         </button>
 
@@ -24,13 +18,9 @@
           </div>
 
           <!-- Info Overlay -->
-          <div
-            class="bg-gradient-to-t from-black via-black/80 to-transparent pt-12 pb-10 px-6"
-          >
+          <div class="modal-info-overlay">
             <div class="flex items-center gap-3 mb-2">
-              <div
-                class="w-10 h-10 rounded-full bg-lime-400 flex items-center justify-center text-black font-bold"
-              >
+              <div class="modal-avatar">
                 {{ user.initials }}
               </div>
               <div>
@@ -42,13 +32,10 @@
               </div>
             </div>
 
-            <div
-              v-if="record.note"
-              class="mt-4 p-3 bg-zinc-800/50 rounded-lg border-l-4 border-lime-400 backdrop-blur-sm"
-            >
+            <div v-if="record.note" class="modal-quote">
               <div class="flex gap-2">
-                <Quote :size="16" class="text-lime-400 shrink-0" />
-                <p class="text-zinc-200 text-sm italic">"{{ record.note }}"</p>
+                <Quote :size="16" class="modal-quote-icon" />
+                <p class="modal-quote-text">"{{ record.note }}"</p>
               </div>
             </div>
           </div>
@@ -83,6 +70,75 @@ const formatTime = (dateString: string) => {
 </script>
 
 <style scoped>
+/* ========== Modal Overlay ========== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-modal-overlay);
+  backdrop-filter: blur(12px);
+}
+
+/* ========== Close Button ========== */
+.modal-close-button {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 10;
+  padding: 0.5rem;
+  background-color: rgba(39, 39, 42, 0.5);
+  border-radius: 9999px;
+  color: white;
+  backdrop-filter: blur(4px);
+}
+
+/* ========== Info Overlay ========== */
+.modal-info-overlay {
+  background: linear-gradient(to top, black, rgba(0, 0, 0, 0.8), transparent);
+  padding-top: 3rem;
+  padding-bottom: 2.5rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+/* ========== Avatar ========== */
+.modal-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  background-color: var(--color-modal-avatar-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: black;
+  font-weight: 700;
+}
+
+/* ========== Quote Box ========== */
+.modal-quote {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: rgba(39, 39, 42, 0.5);
+  border-radius: 0.5rem;
+  border-left: 4px solid var(--color-modal-quote-border);
+  backdrop-filter: blur(4px);
+}
+
+.modal-quote-icon {
+  color: var(--color-modal-quote-icon);
+  flex-shrink: 0;
+}
+
+.modal-quote-text {
+  color: #e4e4e7; /* zinc-200 */
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+/* ========== Fade Transition ========== */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;

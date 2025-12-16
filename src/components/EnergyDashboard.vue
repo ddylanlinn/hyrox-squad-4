@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col items-center justify-center flex-1 py-4 relative">
     <!-- Power Ring -->
-    <div class="relative w-64 h-64 flex items-center justify-center mb-8">
+    <div class="relative w-64 h-56 flex items-center justify-center mb-8">
       <!-- Background Circle -->
       <svg class="absolute top-0 left-0 w-full h-full transform -rotate-90">
         <circle
@@ -9,40 +9,33 @@
           cy="50%"
           :r="radius"
           fill="transparent"
-          stroke="#e4e4e7"
+          class="energy-ring-bg"
           stroke-width="12"
           stroke-linecap="round"
         />
         <!-- Progress Circle -->
         <circle
-          class="ring-circle"
+          class="ring-circle energy-ring-progress"
           cx="50%"
           cy="50%"
           :r="radius"
           fill="transparent"
-          :stroke="percent === 100 ? '#84cc16' : '#22c55e'"
           stroke-width="12"
           stroke-linecap="round"
           :stroke-dasharray="circumference"
           :stroke-dashoffset="offset"
-          :style="{
-            filter:
-              percent === 100
-                ? 'drop-shadow(0 0 8px rgba(132,204,22,0.5))'
-                : 'none',
-          }"
+          :class="{ 'energy-complete': percent === 100 }"
         />
       </svg>
 
-      <!-- Center Stats -->
       <div class="z-10 text-center">
         <div
-          class="text-6xl font-black text-zinc-900 tabular-nums tracking-tighter"
+          class="text-6xl font-black text-primary tabular-nums tracking-tighter"
         >
-          {{ percent }}<span class="text-3xl text-zinc-400">%</span>
+          {{ percent }}<span class="text-3xl text-tertiary"> %</span>
         </div>
         <div
-          class="text-zinc-400 text-sm uppercase tracking-widest font-bold mt-1"
+          class="text-tertiary text-sm uppercase tracking-widest font-bold mt-1"
         >
           Energy
         </div>
@@ -57,9 +50,7 @@
         :disabled="!getUserRecord(user.id)"
         :class="[
           'group relative flex items-center justify-center w-14 h-14 rounded-full border-2 transition-all duration-300',
-          getUserRecord(user.id)
-            ? 'border-lime-500 bg-white cursor-pointer hover:scale-105 shadow-[0_4px_12px_rgba(132,204,22,0.3)]'
-            : 'border-zinc-200 bg-zinc-50 opacity-60',
+          getUserRecord(user.id) ? 'avatar-active' : 'avatar-inactive',
         ]"
         @click="handleAvatarClick(user.id)"
       >
@@ -69,13 +60,11 @@
             :alt="user.name"
             class="w-full h-full object-cover rounded-full p-[2px]"
           />
-          <div
-            class="absolute -bottom-1 -right-1 bg-lime-500 text-white rounded-full p-0.5 border-2 border-white"
-          >
+          <div class="avatar-check-badge">
             <Check :size="10" :stroke-width="4" />
           </div>
         </template>
-        <span v-else class="text-zinc-400 font-bold text-sm">{{
+        <span v-else class="text-tertiary font-bold text-sm">{{
           user.initials
         }}</span>
 
@@ -83,7 +72,9 @@
         <span
           :class="[
             'absolute -bottom-6 text-[10px] font-bold tracking-wide',
-            getUserRecord(user.id) ? 'text-lime-600' : 'text-zinc-400',
+            getUserRecord(user.id)
+              ? 'avatar-name-active'
+              : 'avatar-name-inactive',
           ]"
         >
           {{ user.name }}
@@ -145,3 +136,65 @@ const handleAvatarClick = (userId: string) => {
   }
 };
 </script>
+
+<style scoped>
+/* ========== Energy Ring Colors ========== */
+.energy-ring-bg {
+  stroke: var(--color-energy-ring-bg);
+}
+
+.energy-ring-progress {
+  stroke: var(--color-energy-ring-progress);
+}
+
+.energy-complete {
+  stroke: var(--color-primary-500);
+  filter: drop-shadow(0 0 8px rgba(132, 204, 22, 0.5));
+}
+
+/* ========== Avatar States ========== */
+.avatar-active {
+  border-color: var(--color-primary-500);
+  background-color: white;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(132, 204, 22, 0.3);
+}
+
+.avatar-active:hover {
+  transform: scale(1.05);
+}
+
+.avatar-inactive {
+  border-color: var(--color-border);
+  background-color: var(--color-neutral-50);
+  opacity: 0.6;
+}
+
+.avatar-check-badge {
+  position: absolute;
+  bottom: -0.25rem;
+  right: -0.25rem;
+  background-color: var(--color-primary-500);
+  color: white;
+  border-radius: 9999px;
+  padding: 0.125rem;
+  border: 2px solid white;
+}
+
+.avatar-name-active {
+  color: var(--color-primary-600);
+}
+
+.avatar-name-inactive {
+  color: var(--color-text-tertiary);
+}
+
+/* ========== Text Colors ========== */
+.text-primary {
+  color: var(--color-text-primary);
+}
+
+.text-tertiary {
+  color: var(--color-text-tertiary);
+}
+</style>

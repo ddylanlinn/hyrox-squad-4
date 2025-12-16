@@ -1,3 +1,6 @@
+/* Import unified theme colors */
+@import "../../styles/theme.css";
+
 @import "tailwindcss";
 
 /* Custom scrollbar hiding for clean UI */
