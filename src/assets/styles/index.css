@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+/* Custom scrollbar hiding for clean UI */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Animation for the ring */
+.ring-circle {
+  transition: stroke-dashoffset 1s ease-in-out;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+/* Base styles */
+@layer base {
+  body {
+    @apply bg-white text-zinc-900 antialiased overflow-x-hidden;
+  }
+
+  ::selection {
+    @apply bg-lime-400 text-black;
+  }
+}
