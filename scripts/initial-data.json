@@ -1,0 +1,48 @@
+{
+  "squads": [
+    {
+      "id": "squad-001",
+      "name": "你也討厭跑步對不對？",
+      "description": "20250228",
+      "competitionDate": "2025-02-28",
+      "memberIds": ["u1", "u2", "u3", "u4"],
+      "captainId": "u1",
+      "targetDailyWorkouts": 4,
+      "color": "#FF6B6B"
+    }
+  ],
+  "users": [
+    {
+      "id": "u1",
+      "name": "Dylan",
+      "initials": "DL",
+      "avatarUrl": ""
+    },
+    {
+      "id": "u2",
+      "name": "Crystal",
+      "initials": "CH",
+      "avatarUrl": ""
+    },
+    {
+      "id": "u3",
+      "name": "Sylvi",
+      "initials": "SB",
+      "avatarUrl": ""
+    },
+    {
+      "id": "u4",
+      "name": "Andrew",
+      "initials": "AC",
+      "avatarUrl": ""
+    }
+  ],
+  "workouts": [
+    {
+      "userId": "u2",
+      "date": "2025-12-16",
+      "imageUrl": "https://picsum.photos/400/600?random=1",
+      "note": "Dying after those wall balls"
+    }
+  ]
+}
