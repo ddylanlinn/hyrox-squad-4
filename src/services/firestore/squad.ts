@@ -1,6 +1,6 @@
 /**
  * Squad Service
- * 處理小隊相關的 Firestore 操作
+ * Handle squad-related Firestore operations
  */
 
 import {
@@ -17,7 +17,7 @@ import { db } from "../../config/firebase";
 import type { SquadDocument, SquadMemberDocument } from "../../types/firestore";
 
 /**
- * 取得小隊資料
+ * Get squad data
  */
 export async function getSquad(squadId: string): Promise<SquadDocument | null> {
   const squadRef = doc(db, "squads", squadId);
@@ -30,8 +30,8 @@ export async function getSquad(squadId: string): Promise<SquadDocument | null> {
 }
 
 /**
- * 取得小隊成員列表
- * 按連續天數降序排列
+ * Get squad members list
+ * Sort by consecutive days in descending order
  */
 export async function getSquadMembers(
   squadId: string
@@ -44,7 +44,7 @@ export async function getSquadMembers(
 }
 
 /**
- * 更新小隊資料
+ * Update squad data
  */
 export async function updateSquad(
   squadId: string,
@@ -58,7 +58,7 @@ export async function updateSquad(
 }
 
 /**
- * 更新小隊成員資料
+ * Update squad member data
  */
 export async function updateSquadMember(
   squadId: string,

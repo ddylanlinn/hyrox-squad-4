@@ -1,8 +1,8 @@
 /**
  * Firestore Service
- * 統一匯出所有 Firestore 相關操作
+ * Export all Firestore related operations
  *
- * 使用範例：
+ * Usage example:
  * import { getDashboardData, createWorkout } from '@/services/firestore';
  */
 

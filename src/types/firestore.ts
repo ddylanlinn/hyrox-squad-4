@@ -10,21 +10,21 @@ export interface SquadDocument {
   createdAt: Timestamp;
   updatedAt: Timestamp;
 
-  // 成員資訊
+  // Member information
   memberIds: string[];
   memberCount: number;
   captainId?: string;
 
-  // 小隊統計（快取欄位）
+  // Squad statistics (cached fields)
   currentStreak: number;
   averageStreak: number;
   totalWorkouts: number;
   lastActivityDate?: string; // YYYY-MM-DD
 
-  // 目標設定
+  // Target settings
   targetDailyWorkouts?: number;
 
-  // 可選的擴展欄位
+  // Optional extension fields
   avatarUrl?: string;
   color?: string;
   isActive: boolean;
@@ -36,12 +36,12 @@ export interface SquadMemberDocument {
   joinedAt: Timestamp;
   role: "captain" | "member";
 
-  // 成員在小隊中的統計（快取）
+  // Member statistics in squad (cached)
   currentStreak: number;
   totalWorkouts: number;
   lastWorkoutDate?: string; // YYYY-MM-DD
 
-  // 使用者基本資料（冗餘，減少查詢）
+  // User basic data (redundant, reduce queries)
   name: string;
   initials: string;
   avatarUrl?: string;
@@ -54,12 +54,12 @@ export interface SquadDailyStats {
   activeMembers: string[];
   completionRate: number; // 0-1
 
-  // 各成員的完成次數
+  // Completion count for each member
   memberCounts: {
     [userId: string]: number;
   };
 
-  // 距離比賽天數（快取）
+  // Days until competition (cached)
   daysUntilCompetition: number;
 
   createdAt: Timestamp;
@@ -72,25 +72,45 @@ export interface UserDocument {
   id: string;
   name: string;
   initials: string;
+  email?: string; // Added: User email
   avatarUrl?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  lastLoginAt?: Timestamp; // Added: Last login time
 
-  // 小隊關聯
+  // Squad associations
   currentSquadId?: string;
-  squadIds: string[];
+  squadIds?: string[]; // Made optional, new users may not have joined a squad yet
 
-  // 統計欄位
-  currentStreak: number;
-  longestStreak: number;
-  totalWorkouts: number;
+  // Statistics fields
+  currentStreak?: number; // Made optional
+  longestStreak?: number; // Made optional
+  totalWorkouts?: number; // Made optional
   lastWorkoutDate?: string; // YYYY-MM-DD
+}
+
+// ==================== Auth Binding Types ====================
+
+/**
+ * Authentication account binding
+ * Used to bind Firebase Auth UID to app user ID
+ *
+ * Collection: auth-bindings/{firebaseAuthUid}
+ */
+export interface AuthBindingDocument {
+  firebaseAuthUid: string; // Firebase Auth UID (document ID)
+  appUserId: string; // Bound app user ID (u1, u2, u3, u4)
+  provider: string; // Login method (google.com, facebook.com, etc.)
+  email?: string; // Login email
+  displayName?: string; // Login display name
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 export interface UserDailyStats {
   date: string; // YYYY-MM-DD
   userId: string;
-  count: number; // 當日完成次數 (0-4)
+  count: number; // Daily completion count (0-4)
   workoutIds: string[];
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -108,7 +128,7 @@ export interface WorkoutDocument {
   note?: string;
   createdAt: Timestamp;
 
-  // 可選欄位
+  // Optional fields
   missionId?: string;
 }
 
@@ -120,7 +140,7 @@ export interface GlobalDailyStats {
   activeUsers: string[];
   updatedAt: Timestamp;
 
-  // 快取欄位
+  // Cached fields
   userCounts: {
     [userId: string]: number;
   };

@@ -1,8 +1,8 @@
 /**
  * Firebase Storage Service
- * 處理檔案上傳和管理
+ * Handles file upload and management
  *
- * 使用範例：
+ * Usage example:
  * import { uploadWorkoutImage, uploadUserAvatar } from '@/services/storage';
  */
 
@@ -16,28 +16,28 @@ import {
 import { storage } from "../../config/firebase";
 
 /**
- * 壓縮圖片
+ * Compress image
  *
- * @param file - 原始圖片檔案
- * @returns 壓縮後的圖片檔案
+ * @param file - Original image file
+ * @returns Compressed image file
  */
 async function compressImage(file: File): Promise<File> {
   const options = {
-    maxSizeMB: 1, // 壓縮後最大 1MB
-    maxWidthOrHeight: 1920, // 最大寬度或高度 1920px
-    useWebWorker: true, // 使用 Web Worker 避免阻塞 UI
-    fileType: "image/jpeg" as const, // 統一輸出為 JPEG 格式(檔案較小)
+    maxSizeMB: 1, // Max 1MB after compression
+    maxWidthOrHeight: 1920, // Max width or height 1920px
+    useWebWorker: true, // Use Web Worker to avoid blocking UI
+    fileType: "image/jpeg" as const, // Unified output as JPEG format (smaller file size)
   };
 
   try {
     console.log(
-      `📦 開始壓縮圖片: ${file.name} (${(file.size / 1024 / 1024).toFixed(
+      `Compressing image: ${file.name} (${(file.size / 1024 / 1024).toFixed(
         2
       )}MB)`
     );
     const compressedFile = await imageCompression(file, options);
     console.log(
-      `✅ 壓縮完成: ${compressedFile.name} (${(
+      `Compression complete: ${compressedFile.name} (${(
         compressedFile.size /
         1024 /
         1024
@@ -45,59 +45,59 @@ async function compressImage(file: File): Promise<File> {
     );
     return compressedFile;
   } catch (error) {
-    console.error("❌ 圖片壓縮失敗:", error);
-    // 如果壓縮失敗,返回原始檔案
-    console.warn("⚠️ 使用原始檔案上傳");
+    console.error("Image compression failed:", error);
+    // If compression fails, return original file
+    console.warn("Using original file for upload");
     return file;
   }
 }
 
 /**
- * 上傳訓練照片
+ * Upload workout photo
  *
- * 儲存路徑：workouts/{squadId}/{userId}/{fileName}
+ * Storage path: workouts/{squadId}/{userId}/{fileName}
  *
- * @param file - 要上傳的檔案
- * @param userId - 使用者 ID
- * @param squadId - 小隊 ID
- * @returns 上傳後的檔案 URL
+ * @param file - File to upload
+ * @param userId - User ID
+ * @param squadId - Squad ID
+ * @returns Uploaded file URL
  */
 export async function uploadWorkoutImage(
   file: File,
   userId: string,
   squadId: string
 ): Promise<string> {
-  // 壓縮圖片
+  // Compress image
   const compressedFile = await compressImage(file);
 
-  // 產生唯一檔名
+  // Generate unique filename
   const timestamp = Date.now();
   const extension = compressedFile.name.split(".").pop();
   const fileName = `${userId}_${timestamp}.${extension}`;
 
-  // 建立儲存路徑
+  // Create storage path
   const storagePath = `workouts/${squadId}/${userId}/${fileName}`;
   const storageRef = ref(storage, storagePath);
 
-  // 上傳檔案
+  // Upload file
   const snapshot = await uploadBytes(storageRef, compressedFile, {
     contentType: compressedFile.type,
   });
 
-  // 取得下載 URL
+  // Get download URL
   const downloadURL = await getDownloadURL(snapshot.ref);
 
   return downloadURL;
 }
 
 /**
- * 刪除訓練照片
+ * Delete workout photo
  *
- * @param imageUrl - 要刪除的圖片 URL
+ * @param imageUrl - Image URL to delete
  */
 export async function deleteWorkoutImage(imageUrl: string): Promise<void> {
   try {
-    // 從 URL 解析出 storage path
+    // Parse storage path from URL
     const url = new URL(imageUrl);
     const pathMatch = url.pathname.match(/\/o\/(.+)\?/);
 
@@ -107,25 +107,25 @@ export async function deleteWorkoutImage(imageUrl: string): Promise<void> {
       await deleteObject(storageRef);
     }
   } catch (error) {
-    console.error("刪除圖片失敗:", error);
-    // 不拋出錯誤，因為圖片可能已經被刪除或不存在
+    console.error("Failed to delete image:", error);
+    // Don't throw error, as image may already be deleted or doesn't exist
   }
 }
 
 /**
- * 上傳使用者頭像
- * 
- * 儲存路徑：avatars/{userId}.{extension}
- * 
-@param file - 要上傳的檔案
- * @param userId - 使用者 ID
- * @returns 上傳後的檔案 URL
+ * Upload user avatar
+ *
+ * Storage path: avatars/{userId}.{extension}
+ *
+ * @param file - File to upload
+ * @param userId - User ID
+ * @returns Uploaded file URL
  */
 export async function uploadUserAvatar(
   file: File,
   userId: string
 ): Promise<string> {
-  // 壓縮圖片
+  // Compress image
   const compressedFile = await compressImage(file);
 
   const extension = compressedFile.name.split(".").pop();
@@ -143,11 +143,11 @@ export async function uploadUserAvatar(
 }
 
 /**
- * 驗證檔案類型
+ * Validate file type
  *
- * @param file - 要驗證的檔案
- * @param allowedTypes - 允許的 MIME types
- * @returns 是否為允許的類型
+ * @param file - File to validate
+ * @param allowedTypes - Allowed MIME types
+ * @returns Whether file type is allowed
  */
 export function validateFileType(
   file: File,
@@ -157,11 +157,11 @@ export function validateFileType(
 }
 
 /**
- * 驗證檔案大小
+ * Validate file size
  *
- * @param file - 要驗證的檔案
- * @param maxSizeMB - 最大大小（MB），預設 5MB
- * @returns 是否符合大小限制
+ * @param file - File to validate
+ * @param maxSizeMB - Max size (MB), default 5MB
+ * @returns Whether file meets size limit
  */
 export function validateFileSize(file: File, maxSizeMB: number = 5): boolean {
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
@@ -169,10 +169,10 @@ export function validateFileSize(file: File, maxSizeMB: number = 5): boolean {
 }
 
 /**
- * 驗證檔案（類型 + 大小）
+ * Validate file (type + size)
  *
- * @param file - 要驗證的檔案
- * @returns 驗證結果
+ * @param file - File to validate
+ * @returns Validation result
  */
 export function validateFile(file: File): {
   valid: boolean;
@@ -181,14 +181,15 @@ export function validateFile(file: File): {
   if (!validateFileType(file)) {
     return {
       valid: false,
-      error: "檔案類型不支援，請上傳 JPG、PNG 或 WebP 格式的圖片",
+      error:
+        "File type not supported, please upload JPG, PNG or WebP format images",
     };
   }
 
   if (!validateFileSize(file)) {
     return {
       valid: false,
-      error: "檔案大小超過 5MB 限制",
+      error: "File size exceeds 5MB limit",
     };
   }
 

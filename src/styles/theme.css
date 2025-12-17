@@ -1,49 +1,49 @@
 /**
  * HYROX Squad Theme - Unified Color System
- * 統一色系設計系統
+ * Unified color design system
  */
 
 :root {
   /* ========== Primary Brand Colors ========== */
-  /* 主品牌色 - Lime/Green 能量色系 */
-  --color-primary-50: #f7fee7; /* lime-50 - 背景淺色 */
+  /* Primary brand color - Lime/Green energy palette */
+  --color-primary-50: #f7fee7; /* lime-50 - light background */
   --color-primary-100: #ecfccb; /* lime-100 */
   --color-primary-200: #d9f99d; /* lime-200 */
   --color-primary-300: #bef264; /* lime-300 */
-  --color-primary-400: #a3e635; /* lime-400 - 主要強調色 */
+  --color-primary-400: #a3e635; /* lime-400 - main accent color */
   --color-primary-500: #84cc16; /* lime-500 */
   --color-primary-600: #65a30d; /* lime-600 */
 
   /* ========== Success/Progress Colors ========== */
-  /* 成功/進度色系 - Green */
-  --color-success-200: #bbf7d0; /* green-200 - 最淺進度 */
-  --color-success-300: #86efac; /* green-300 - 淺進度 */
-  --color-success-400: #4ade80; /* green-400 - 中等進度 */
-  --color-success-500: #22c55e; /* green-500 - 高進度 */
-  --color-success-600: #16a34a; /* green-600 - 最高進度 */
+  /* Success/Progress palette - Green */
+  --color-success-200: #bbf7d0; /* green-200 - lightest progress */
+  --color-success-300: #86efac; /* green-300 - light progress */
+  --color-success-400: #4ade80; /* green-400 - medium progress */
+  --color-success-500: #22c55e; /* green-500 - high progress */
+  --color-success-600: #16a34a; /* green-600 - highest progress */
 
   /* ========== Accent Colors ========== */
-  /* 強調色系 */
-  --color-accent-yellow-400: #facc15; /* yellow-400 - 閃電/獎盃 */
+  /* Accent colors */
+  --color-accent-yellow-400: #facc15; /* yellow-400 - lightning/trophy */
   --color-accent-yellow-600: #ca8a04; /* yellow-600 */
-  --color-accent-blue-200: #bfdbfe; /* blue-200 - 當天日期淺色 */
-  --color-accent-blue-500: #3b82f6; /* blue-500 - 當天日期 */
-  --color-accent-orange-500: #f97316; /* orange-500 - 火焰 */
+  --color-accent-blue-200: #bfdbfe; /* blue-200 - today's date light */
+  --color-accent-blue-500: #3b82f6; /* blue-500 - today's date */
+  --color-accent-orange-500: #f97316; /* orange-500 - flame */
 
   /* ========== Neutral Colors ========== */
-  /* 中性色系 - Zinc/Gray */
-  --color-neutral-50: #fafafa; /* zinc-50 - 最淺背景 */
-  --color-neutral-100: #f4f4f5; /* zinc-100 - 淺背景/邊框 */
-  --color-neutral-200: #e4e4e7; /* zinc-200 - 邊框/分隔線 */
+  /* Neutral palette - Zinc/Gray */
+  --color-neutral-50: #fafafa; /* zinc-50 - lightest background */
+  --color-neutral-100: #f4f4f5; /* zinc-100 - light background/border */
+  --color-neutral-200: #e4e4e7; /* zinc-200 - border/divider */
   --color-neutral-300: #d4d4d8; /* zinc-300 - placeholder */
-  --color-neutral-400: #a1a1aa; /* zinc-400 - 次要文字 */
-  --color-neutral-500: #71717a; /* zinc-500 - 輔助文字 */
-  --color-neutral-600: #52525b; /* zinc-600 - 一般文字 */
-  --color-neutral-800: #27272a; /* zinc-800 - 深色背景 */
-  --color-neutral-900: #18181b; /* zinc-900 - 主要按鈕/深色文字 */
+  --color-neutral-400: #a1a1aa; /* zinc-400 - secondary text */
+  --color-neutral-500: #71717a; /* zinc-500 - helper text */
+  --color-neutral-600: #52525b; /* zinc-600 - normal text */
+  --color-neutral-800: #27272a; /* zinc-800 - dark background */
+  --color-neutral-900: #18181b; /* zinc-900 - primary button/dark text */
 
   /* ========== Semantic Colors ========== */
-  /* 語意化顏色 */
+  /* Semantic colors */
   --color-background: #ffffff;
   --color-text-primary: var(--color-neutral-900);
   --color-text-secondary: var(--color-neutral-500);
@@ -52,7 +52,7 @@
   --color-border-light: var(--color-neutral-100);
 
   /* ========== Component-Specific Colors ========== */
-  /* 組件專用顏色 */
+  /* Component-specific colors */
 
   /* Heatmap */
   --color-heatmap-empty: var(--color-neutral-200);
@@ -91,7 +91,7 @@
   --color-modal-quote-icon: var(--color-primary-400);
 
   /* ========== Shadows ========== */
-  /* 陰影系統 */
+  /* Shadow system */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);

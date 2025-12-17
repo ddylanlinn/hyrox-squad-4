@@ -1,6 +1,6 @@
 /**
  * Workout Service
- * 處理訓練記錄相關的 Firestore 操作
+ * Handle workout-related Firestore operations
  */
 
 import {
@@ -18,7 +18,7 @@ import type { WorkoutDocument } from "../../types/firestore";
 import { updateUserDailyStats } from "./user";
 
 /**
- * 取得今日所有訓練記錄
+ * Get today's all workouts
  */
 export async function getTodayWorkouts(
   squadId: string
@@ -28,7 +28,7 @@ export async function getTodayWorkouts(
 }
 
 /**
- * 取得特定日期的訓練記錄
+ * Get workouts by date
  */
 export async function getWorkoutsByDate(
   squadId: string,
@@ -47,7 +47,7 @@ export async function getWorkoutsByDate(
 }
 
 /**
- * 取得使用者的訓練記錄
+ * Get user workouts
  */
 export async function getUserWorkouts(
   userId: string,
@@ -69,13 +69,13 @@ export async function getUserWorkouts(
 }
 
 /**
- * 建立訓練記錄
+ * Create workout
  *
- * @param userId - 使用者 ID
- * @param squadId - 小隊 ID
- * @param imageUrl - 訓練照片 URL
- * @param note - 備註（可選）
- * @returns 訓練記錄 ID
+ * @param userId - User ID
+ * @param squadId - Squad ID
+ * @param imageUrl - Workout image URL
+ * @param note - Note (optional)
+ * @returns Workout ID
  */
 export async function createWorkout(
   userId: string,
@@ -98,22 +98,22 @@ export async function createWorkout(
     createdAt: Timestamp.now(),
   };
 
-  // 建立訓練記錄
+  // Create workout
   await setDoc(workoutDoc, workoutData);
 
-  // 更新使用者每日統計
+  // Update user daily stats
   await updateUserDailyStats(userId, today, workoutDoc.id);
 
   return workoutDoc.id;
 }
 
 /**
- * 刪除訓練記錄
- * 注意：這個操作也應該更新相關的統計資料
+ * Delete workout
+ * Note: This operation should also update related statistics
  */
 export async function deleteWorkout(workoutId: string): Promise<void> {
   const workoutRef = doc(db, "workouts", workoutId);
-  // TODO: 實作刪除邏輯，包含更新統計
+  // TODO: Implement delete logic, including updating statistics
   // await deleteDoc(workoutRef);
   throw new Error("Delete workout not implemented yet");
 }

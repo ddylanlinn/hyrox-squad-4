@@ -1,20 +1,20 @@
 /**
  * Firestore Helper Functions
- * 輔助函數和工具方法
+ * Helper functions and utility methods
  */
 
 import type { UserDailyStats } from "../../types/firestore";
 
 /**
- * 計算連續天數
+ * Calculate streak
  *
- * @param stats - 使用者每日統計陣列（應按日期降序排列）
- * @returns 連續天數
+ * @param stats - User daily stats array (should be sorted by date in descending order)
+ * @returns Streak count
  */
 export function calculateStreak(stats: UserDailyStats[]): number {
   if (stats.length === 0) return 0;
 
-  // 確保按日期降序排列
+  // Ensure sorted by date in descending order
   const sortedStats = [...stats].sort((a, b) => b.date.localeCompare(a.date));
 
   let streak = 0;
@@ -29,7 +29,7 @@ export function calculateStreak(stats: UserDailyStats[]): number {
       (today.getTime() - statDate.getTime()) / (1000 * 60 * 60 * 24)
     );
 
-    // 檢查是否連續且有訓練記錄
+    // Check if consecutive and has workout record
     if (daysDiff === streak && stat.count > 0) {
       streak++;
     } else {
@@ -41,10 +41,10 @@ export function calculateStreak(stats: UserDailyStats[]): number {
 }
 
 /**
- * 計算距離比賽天數
+ * Calculate days until competition
  *
- * @param competitionDate - 比賽日期 (YYYY-MM-DD)
- * @returns 距離天數（負數表示已過期）
+ * @param competitionDate - Competition date (YYYY-MM-DD)
+ * @returns Days until competition (negative number if expired)
  */
 export function calculateDaysUntilCompetition(competitionDate: string): number {
   const today = new Date();
@@ -60,19 +60,19 @@ export function calculateDaysUntilCompetition(competitionDate: string): number {
 }
 
 /**
- * 取得今天的日期字串
+ * Get today's date string
  *
- * @returns YYYY-MM-DD 格式的日期字串
+ * @returns YYYY-MM-DD formatted date string
  */
 export function getTodayString(): string {
   return new Date().toISOString().split("T")[0];
 }
 
 /**
- * 取得指定天數前的日期字串
+ * Get the date string for a specified number of days ago
  *
- * @param days - 天數
- * @returns YYYY-MM-DD 格式的日期字串
+ * @param days - Number of days
+ * @returns YYYY-MM-DD formatted date string
  */
 export function getDaysAgo(days: number): string {
   const date = new Date();
@@ -81,11 +81,11 @@ export function getDaysAgo(days: number): string {
 }
 
 /**
- * 產生日期範圍陣列
+ * Generate date range array
  *
- * @param startDate - 開始日期 (YYYY-MM-DD)
- * @param endDate - 結束日期 (YYYY-MM-DD)
- * @returns 日期字串陣列
+ * @param startDate - Start date (YYYY-MM-DD)
+ * @param endDate - End date (YYYY-MM-DD)
+ * @returns Date string array
  */
 export function generateDateRange(
   startDate: string,
@@ -105,11 +105,11 @@ export function generateDateRange(
 }
 
 /**
- * 格式化日期為顯示用字串
+ * Format date to display string
  *
- * @param dateString - 日期字串 (YYYY-MM-DD)
- * @param locale - 語系，預設繁體中文
- * @returns 格式化後的日期字串
+ * @param dateString - Date string (YYYY-MM-DD)
+ * @param locale - Language, default is Traditional Chinese
+ * @returns Formatted date string
  */
 export function formatDate(
   dateString: string,
@@ -124,14 +124,14 @@ export function formatDate(
 }
 
 /**
- * 檢查日期是否為今天
+ * Check if a date is today
  */
 export function isToday(dateString: string): boolean {
   return dateString === getTodayString();
 }
 
 /**
- * 檢查日期是否為昨天
+ * Check if a date is yesterday
  */
 export function isYesterday(dateString: string): boolean {
   return dateString === getDaysAgo(1);

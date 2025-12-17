@@ -1,7 +1,7 @@
 /**
  * Firestore Service
  *
- * 提供所有 Firestore 資料庫操作的統一介面
+ * Provides unified interface for all Firestore database operations
  */
 
 import {
@@ -31,7 +31,7 @@ import type {
 // ==================== Squad Operations ====================
 
 /**
- * 取得小隊資料
+ * Get squad data
  */
 export async function getSquad(squadId: string): Promise<SquadDocument | null> {
   const squadRef = doc(db, "squads", squadId);
@@ -44,7 +44,7 @@ export async function getSquad(squadId: string): Promise<SquadDocument | null> {
 }
 
 /**
- * 取得小隊成員
+ * Get squad members
  */
 export async function getSquadMembers(
   squadId: string
@@ -58,7 +58,7 @@ export async function getSquadMembers(
 }
 
 /**
- * 更新小隊資料
+ * Update squad data
  */
 export async function updateSquad(
   squadId: string,
@@ -74,7 +74,7 @@ export async function updateSquad(
 // ==================== User Operations ====================
 
 /**
- * 取得使用者資料
+ * Get user data
  */
 export async function getUser(userId: string): Promise<UserDocument | null> {
   const userRef = doc(db, "users", userId);
@@ -87,7 +87,7 @@ export async function getUser(userId: string): Promise<UserDocument | null> {
 }
 
 /**
- * 取得使用者最近 N 天的統計
+ * Get user statistics for the last N days
  */
 export async function getUserStats(
   userId: string,
@@ -102,7 +102,7 @@ export async function getUserStats(
 }
 
 /**
- * 更新使用者資料
+ * Update user data
  */
 export async function updateUser(
   userId: string,
@@ -118,7 +118,7 @@ export async function updateUser(
 // ==================== Workout Operations ====================
 
 /**
- * 取得今日所有訓練記錄
+ * Get all workout records for today
  */
 export async function getTodayWorkouts(
   squadId: string
@@ -138,7 +138,7 @@ export async function getTodayWorkouts(
 }
 
 /**
- * 取得特定日期的訓練記錄
+ * Get workout records for a specific date
  */
 export async function getWorkoutsByDate(
   squadId: string,
@@ -158,7 +158,7 @@ export async function getWorkoutsByDate(
 }
 
 /**
- * 建立訓練記錄
+ * Create workout record
  */
 export async function createWorkout(
   userId: string,
@@ -183,14 +183,14 @@ export async function createWorkout(
 
   await setDoc(workoutDoc, workoutData);
 
-  // 更新使用者每日統計
+  // Update user daily statistics
   await updateUserDailyStats(userId, today, workoutDoc.id);
 
   return workoutDoc.id;
 }
 
 /**
- * 更新使用者每日統計
+ * Update user daily statistics
  */
 async function updateUserDailyStats(
   userId: string,
@@ -223,7 +223,7 @@ async function updateUserDailyStats(
 // ==================== Dashboard Data ====================
 
 /**
- * 取得儀表板所需的所有資料
+ * Get all data needed for dashboard
  */
 export async function getDashboardData(userId: string, squadId: string) {
   const [squad, members, user, userStats, todayWorkouts] = await Promise.all([
@@ -246,12 +246,12 @@ export async function getDashboardData(userId: string, squadId: string) {
 // ==================== Helper Functions ====================
 
 /**
- * 計算連續天數
+ * Calculate streak days
  */
 export function calculateStreak(stats: UserDailyStats[]): number {
   if (stats.length === 0) return 0;
 
-  // 按日期降序排列
+  // Sort by date descending
   const sortedStats = [...stats].sort((a, b) => b.date.localeCompare(a.date));
 
   let streak = 0;
@@ -277,7 +277,7 @@ export function calculateStreak(stats: UserDailyStats[]): number {
 }
 
 /**
- * 計算距離比賽天數
+ * Calculate days until competition
  */
 export function calculateDaysUntilCompetition(competitionDate: string): number {
   const today = new Date();

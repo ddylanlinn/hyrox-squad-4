@@ -1,6 +1,6 @@
 /**
  * User Service
- * 處理使用者相關的 Firestore 操作
+ * Handle user-related Firestore operations
  */
 
 import {
@@ -19,7 +19,7 @@ import { db } from "../../config/firebase";
 import type { UserDocument, UserDailyStats } from "../../types/firestore";
 
 /**
- * 取得使用者資料
+ * Get user data
  */
 export async function getUser(userId: string): Promise<UserDocument | null> {
   const userRef = doc(db, "users", userId);
@@ -32,10 +32,10 @@ export async function getUser(userId: string): Promise<UserDocument | null> {
 }
 
 /**
- * 取得使用者最近 N 天的統計資料
+ * Get user stats for the last N days
  *
- * @param userId - 使用者 ID
- * @param days - 天數，預設 70 天
+ * @param userId - User ID
+ * @param days - Number of days, default 70 days
  */
 export async function getUserStats(
   userId: string,
@@ -49,7 +49,7 @@ export async function getUserStats(
 }
 
 /**
- * 取得使用者特定日期的統計
+ * Get user stats by date
  */
 export async function getUserStatsByDate(
   userId: string,
@@ -65,7 +65,7 @@ export async function getUserStatsByDate(
 }
 
 /**
- * 更新使用者資料
+ * Update user data
  */
 export async function updateUser(
   userId: string,
@@ -79,8 +79,8 @@ export async function updateUser(
 }
 
 /**
- * 更新使用者每日統計
- * 內部使用，由 workout service 呼叫
+ * Update user daily stats
+ * Internal use, called by workout service
  */
 export async function updateUserDailyStats(
   userId: string,
@@ -91,7 +91,7 @@ export async function updateUserDailyStats(
   const statsSnap = await getDoc(statsRef);
 
   if (statsSnap.exists()) {
-    // 更新現有統計
+    // Update existing stats
     const currentData = statsSnap.data() as UserDailyStats;
     await updateDoc(statsRef, {
       count: currentData.count + 1,
@@ -99,7 +99,7 @@ export async function updateUserDailyStats(
       updatedAt: Timestamp.now(),
     });
   } else {
-    // 建立新統計
+    // Create new stats
     const newStats: UserDailyStats = {
       date,
       userId,
