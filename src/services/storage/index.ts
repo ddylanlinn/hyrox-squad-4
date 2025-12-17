@@ -6,6 +6,7 @@
  * import { uploadWorkoutImage, uploadUserAvatar } from '@/services/storage';
  */
 
+import imageCompression from "browser-image-compression";
 import {
   ref,
   uploadBytes,
@@ -13,6 +14,43 @@ import {
   deleteObject,
 } from "firebase/storage";
 import { storage } from "../../config/firebase";
+
+/**
+ * 壓縮圖片
+ *
+ * @param file - 原始圖片檔案
+ * @returns 壓縮後的圖片檔案
+ */
+async function compressImage(file: File): Promise<File> {
+  const options = {
+    maxSizeMB: 1, // 壓縮後最大 1MB
+    maxWidthOrHeight: 1920, // 最大寬度或高度 1920px
+    useWebWorker: true, // 使用 Web Worker 避免阻塞 UI
+    fileType: "image/jpeg" as const, // 統一輸出為 JPEG 格式(檔案較小)
+  };
+
+  try {
+    console.log(
+      `📦 開始壓縮圖片: ${file.name} (${(file.size / 1024 / 1024).toFixed(
+        2
+      )}MB)`
+    );
+    const compressedFile = await imageCompression(file, options);
+    console.log(
+      `✅ 壓縮完成: ${compressedFile.name} (${(
+        compressedFile.size /
+        1024 /
+        1024
+      ).toFixed(2)}MB)`
+    );
+    return compressedFile;
+  } catch (error) {
+    console.error("❌ 圖片壓縮失敗:", error);
+    // 如果壓縮失敗,返回原始檔案
+    console.warn("⚠️ 使用原始檔案上傳");
+    return file;
+  }
+}
 
 /**
  * 上傳訓練照片
@@ -29,9 +67,12 @@ export async function uploadWorkoutImage(
   userId: string,
   squadId: string
 ): Promise<string> {
+  // 壓縮圖片
+  const compressedFile = await compressImage(file);
+
   // 產生唯一檔名
   const timestamp = Date.now();
-  const extension = file.name.split(".").pop();
+  const extension = compressedFile.name.split(".").pop();
   const fileName = `${userId}_${timestamp}.${extension}`;
 
   // 建立儲存路徑
@@ -39,8 +80,8 @@ export async function uploadWorkoutImage(
   const storageRef = ref(storage, storagePath);
 
   // 上傳檔案
-  const snapshot = await uploadBytes(storageRef, file, {
-    contentType: file.type,
+  const snapshot = await uploadBytes(storageRef, compressedFile, {
+    contentType: compressedFile.type,
   });
 
   // 取得下載 URL
@@ -84,13 +125,16 @@ export async function uploadUserAvatar(
   file: File,
   userId: string
 ): Promise<string> {
-  const extension = file.name.split(".").pop();
+  // 壓縮圖片
+  const compressedFile = await compressImage(file);
+
+  const extension = compressedFile.name.split(".").pop();
   const fileName = `${userId}.${extension}`;
   const storagePath = `avatars/${fileName}`;
   const storageRef = ref(storage, storagePath);
 
-  const snapshot = await uploadBytes(storageRef, file, {
-    contentType: file.type,
+  const snapshot = await uploadBytes(storageRef, compressedFile, {
+    contentType: compressedFile.type,
   });
 
   const downloadURL = await getDownloadURL(snapshot.ref);
