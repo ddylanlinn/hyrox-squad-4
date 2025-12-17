@@ -95,6 +95,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useAuth } from "../composables/useAuth";
+import { FIXED_LOGIN_PASSWORD } from "../constants";
 
 const {
   loading: authLoading,
@@ -104,7 +105,6 @@ const {
 } = useAuth();
 
 const email = ref("");
-const FIXED_PASSWORD = "Hyrox20260228";
 
 const handleGoogleLogin = async () => {
   try {
@@ -120,7 +120,7 @@ const handleEmailLogin = async () => {
   }
 
   try {
-    await signInWithEmail(email.value, FIXED_PASSWORD);
+    await signInWithEmail(email.value, FIXED_LOGIN_PASSWORD);
   } catch (error: any) {
     console.error("Email login failed:", error);
     // If user not found error, attempt to register

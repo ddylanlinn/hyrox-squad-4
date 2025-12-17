@@ -11,7 +11,7 @@
         v-model="noteContent"
         type="text"
         class="note-input"
-        placeholder="e.g., 5k Run + 100 Wall Balls"
+        :placeholder="WORKOUT_PLACEHOLDER"
       />
     </div>
     <!-- Main Action Section -->
@@ -65,6 +65,13 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { Camera, Copy, Loader2, Check } from "lucide-vue-next";
+import {
+  NUDGE_MESSAGES,
+  DEFAULT_WORKOUT_NOTE,
+  SQUAD_GOAL_ACHIEVED_MESSAGE,
+  WORKOUT_PLACEHOLDER,
+  SQUAD_MEMBER_COUNT,
+} from "../constants";
 
 interface Props {
   isCompleted: boolean;
@@ -85,7 +92,7 @@ const noteContent = ref("");
 const handleCheckInClick = () => {
   const confirmMessage = noteContent.value
     ? `Ready to check in?\n\nWorkout: ${noteContent.value}`
-    : "Ready to check in?\n\n(Tip: Add your workout details above)";
+    : `Ready to check in?\n\n(Tip: Add your workout details above)`;
 
   if (confirm(confirmMessage)) {
     fileInputRef.value?.click();
@@ -99,7 +106,7 @@ const handleFileChange = (e: Event) => {
     setTimeout(() => {
       emit("check-in", {
         file: target.files![0],
-        note: noteContent.value || "Done! Let's go squad!",
+        note: noteContent.value || DEFAULT_WORKOUT_NOTE,
       });
       loading.value = false;
       // Clear note after successful check-in
@@ -109,16 +116,10 @@ const handleFileChange = (e: Event) => {
 };
 
 const handleNudge = () => {
-  const messages = [
-    "Wake up squad! Only I have trained today? 😤",
-    "Let's go team! Don't break the streak! 🔥",
-    "Training done. Who's next? ⚡️",
-    "Hyrox waits for no one. Get it done! 🏋️",
-  ];
   const msg =
-    props.completedCount === 4
-      ? "Squad goal achieved! 💪"
-      : messages[Math.floor(Math.random() * messages.length)];
+    props.completedCount === SQUAD_MEMBER_COUNT
+      ? SQUAD_GOAL_ACHIEVED_MESSAGE
+      : NUDGE_MESSAGES[Math.floor(Math.random() * NUDGE_MESSAGES.length)];
 
   navigator.clipboard.writeText(`Daily Training Check-in\n\n${msg}`);
   copied.value = true;

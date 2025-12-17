@@ -88,6 +88,7 @@
 import { ref, computed, watch, onMounted } from "vue";
 import { Check } from "lucide-vue-next";
 import type { User, WorkoutRecord } from "../types";
+import { SQUAD_MEMBER_COUNT } from "../constants";
 
 interface Props {
   users: User[];
@@ -101,9 +102,11 @@ const emit = defineEmits<{
 
 const percent = ref(0);
 
-// Calculate percentage based on 4 members
+// Calculate percentage based on squad member count
 const completedCount = computed(() => props.records.length);
-const targetPercent = computed(() => (completedCount.value / 4) * 100);
+const targetPercent = computed(
+  () => (completedCount.value / SQUAD_MEMBER_COUNT) * 100
+);
 
 // SVG Config
 const radius = 90;

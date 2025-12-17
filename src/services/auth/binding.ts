@@ -5,6 +5,7 @@
 
 import { doc, getDoc, setDoc, Timestamp } from "firebase/firestore";
 import { db } from "../../config/firebase";
+import { APP_USERS } from "../../constants";
 import type { AuthBindingDocument } from "../../types/firestore";
 
 /**
@@ -85,15 +86,10 @@ export async function updateAuthBindingTimestamp(
  *
  * @returns App user list
  */
-export function getAvailableAppUsers(): Array<{
-  id: string;
-  name: string;
-  initials: string;
+export function getAvailableAppUsers(): ReadonlyArray<{
+  readonly id: string;
+  readonly name: string;
+  readonly initials: string;
 }> {
-  return [
-    { id: "u1", name: "Dylan", initials: "DL" },
-    { id: "u2", name: "Crystal", initials: "CH" },
-    { id: "u3", name: "Sylvi", initials: "SB" },
-    { id: "u4", name: "Andrew", initials: "AC" },
-  ];
+  return APP_USERS;
 }

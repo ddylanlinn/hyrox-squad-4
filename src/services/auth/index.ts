@@ -22,6 +22,10 @@ import {
   updateProfile,
 } from "firebase/auth";
 import { auth } from "../../config/firebase";
+import {
+  AUTH_ERROR_MESSAGES,
+  DEFAULT_AUTH_ERROR_MESSAGE,
+} from "../../constants";
 
 /**
  * Google login
@@ -116,19 +120,5 @@ export function onAuthStateChange(
  */
 export function getAuthErrorMessage(error: any): string {
   const errorCode = error?.code || "";
-
-  const errorMessages: Record<string, string> = {
-    "auth/invalid-email": "Invalid email address",
-    "auth/user-disabled": "This account has been disabled",
-    "auth/user-not-found": "User not found",
-    "auth/wrong-password": "Incorrect password",
-    "auth/email-already-in-use": "This email is already in use",
-    "auth/weak-password": "Password is too weak (at least 6 characters)",
-    "auth/operation-not-allowed": "This login method is not enabled",
-    "auth/popup-closed-by-user": "Login popup was closed",
-    "auth/cancelled-popup-request": "Login request was cancelled",
-    "auth/network-request-failed": "Network connection failed",
-  };
-
-  return errorMessages[errorCode] || "Login failed, please try again later";
+  return AUTH_ERROR_MESSAGES[errorCode] || DEFAULT_AUTH_ERROR_MESSAGE;
 }

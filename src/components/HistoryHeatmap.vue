@@ -16,7 +16,9 @@
           >
           <span class="text-secondary font-medium text-base">Days</span>
         </div>
-        <p class="text-xs text-tertiary mt-1">Until HYROX 2026/02/28</p>
+        <p class="text-xs text-tertiary mt-1">
+          Until HYROX {{ COMPETITION_DATE.replace(/-/g, "/") }}
+        </p>
       </div>
 
       <!-- Current Streak -->
@@ -53,7 +55,7 @@
           ]"
         >
           <div
-            v-if="index === displayHistory.length - 1"
+            v-show="index === displayHistory.length - 1"
             class="absolute inset-0 flex items-center justify-center"
           >
             <Zap :size="16" class="race-icon" fill="currentColor" />
@@ -68,6 +70,7 @@
 import { computed } from "vue";
 import { Flame, Zap } from "lucide-vue-next";
 import type { DailyStats } from "../types";
+import { COMPETITION_DATE, HEATMAP_DAYS_COUNT } from "../constants";
 
 interface Props {
   history: DailyStats[];
@@ -77,26 +80,23 @@ interface Props {
 
 const props = defineProps<Props>();
 
-// Race date: 2026/02/28
-const RACE_DATE = new Date("2026-02-28");
-
 // Calculate days until race
 const daysUntilRace = computed(() => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const raceDay = new Date(RACE_DATE);
+  const raceDay = new Date(COMPETITION_DATE);
   raceDay.setHours(0, 0, 0, 0);
   const diff = raceDay.getTime() - today.getTime();
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 });
 
-// Generate 80 days of history ending at race day (D-79 to D-0)
+// Generate history ending at race day
 const displayHistory = computed(() => {
   const result: DailyStats[] = [];
-  const raceDay = new Date(RACE_DATE);
+  const raceDay = new Date(COMPETITION_DATE);
 
-  // Generate 79 days: from D-79 to D-1
-  for (let i = 79; i >= 1; i--) {
+  // Generate days: from D-(HEATMAP_DAYS_COUNT-1) to D-1
+  for (let i = HEATMAP_DAYS_COUNT - 1; i >= 1; i--) {
     const d = new Date(raceDay);
     d.setDate(d.getDate() - i);
     const dateStr = d.toISOString().split("T")[0];
@@ -112,9 +112,9 @@ const displayHistory = computed(() => {
     );
   }
 
-  // Add race day itself as the 80th item (D-0)
+  // Add race day itself as the last item (D-0)
   result.push({
-    date: RACE_DATE.toISOString().split("T")[0],
+    date: new Date(COMPETITION_DATE).toISOString().split("T")[0],
     count: 0,
     records: [],
   });

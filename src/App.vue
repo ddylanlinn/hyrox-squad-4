@@ -91,35 +91,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from "vue";
-import {
-  onSnapshot,
-  collection,
-  query,
-  where,
-  orderBy as firestoreOrderBy,
-} from "firebase/firestore";
-import { db } from "./config/firebase";
+import { ref, computed, onMounted } from "vue";
 import { useAuth } from "./composables/useAuth";
+import { useDashboard } from "./composables/useDashboard";
+import { useWorkout } from "./composables/useWorkout";
+import { getUserInitials } from "./utils/userHelpers";
+import { CURRENT_SQUAD_ID } from "./constants";
 import LoginView from "./components/LoginView.vue";
 import UserSelection from "./components/UserSelection.vue";
 import HistoryHeatmap from "./components/HistoryHeatmap.vue";
 import EnergyDashboard from "./components/EnergyDashboard.vue";
 import ActionSection from "./components/ActionSection.vue";
 import PhotoModal from "./components/PhotoModal.vue";
-import {
-  getDashboardData,
-  createWorkout,
-  calculateStreak,
-  getTodayString,
-} from "./services/firestore";
-import { uploadWorkoutImage, validateFile } from "./services/storage";
-import type { WorkoutRecord, DailyStats, User } from "./types";
-import type {
-  WorkoutDocument,
-  UserDailyStats,
-  SquadMemberDocument,
-} from "./types/firestore";
+import type { WorkoutRecord } from "./types";
 
 // Auth
 const {
@@ -131,22 +115,30 @@ const {
   bindAppUser,
 } = useAuth();
 
-// Constants
-const CURRENT_SQUAD_ID = "squad-001";
+// Dashboard
+const {
+  loading,
+  error,
+  history,
+  todaysRecords,
+  users,
+  streak,
+  loadDashboardData,
+  initialize: initializeDashboard,
+} = useDashboard({
+  appUserId,
+  squadId: CURRENT_SQUAD_ID,
+});
 
-// State
-const loading = ref(true);
-const error = ref<string | null>(null);
-const history = ref<DailyStats[]>([]);
-const todaysRecords = ref<WorkoutRecord[]>([]);
-const users = ref<User[]>([]);
-const streak = ref(0);
+// Workout
+const { uploading, handleCheckIn: checkIn } = useWorkout({
+  appUserId,
+  squadId: CURRENT_SQUAD_ID,
+});
+
+// Modal State
 const modalOpen = ref(false);
 const selectedRecord = ref<WorkoutRecord | null>(null);
-const uploading = ref(false);
-
-// Firestore realtime listener unsubscribe function
-let unsubscribeWorkouts: (() => void) | null = null;
 
 // Computed
 const currentUserRecord = computed(() =>
@@ -159,22 +151,12 @@ const selectedUser = computed(() =>
   users.value.find((u) => u.id === selectedRecord.value?.userId)
 );
 
-// Helper: Get user initials
-function getUserInitials(firebaseUser: any): string {
-  if (firebaseUser.displayName) {
-    const words = firebaseUser.displayName.trim().split(/\s+/);
-    if (words.length >= 2) {
-      return (words[0][0] + words[1][0]).toUpperCase();
-    }
-    return firebaseUser.displayName.substring(0, 2).toUpperCase();
-  }
-  if (firebaseUser.email) {
-    return firebaseUser.email.substring(0, 2).toUpperCase();
-  }
-  return "U";
-}
+// Initialize dashboard on mount
+onMounted(async () => {
+  await initializeDashboard();
+});
 
-// Handle user selection binding
+// Handlers
 const handleUserSelect = async (selectedUserId: string) => {
   try {
     await bindAppUser(selectedUserId);
@@ -185,183 +167,15 @@ const handleUserSelect = async (selectedUserId: string) => {
   }
 };
 
-// Convert Firestore data to frontend format
-function convertUserDailyStatsToHistory(stats: UserDailyStats[]): DailyStats[] {
-  return stats.map((stat) => ({
-    date: stat.date,
-    count: stat.count,
-    records: [], // Detailed records not needed
-  }));
-}
-
-function convertWorkoutDocumentToRecord(
-  workout: WorkoutDocument
-): WorkoutRecord {
-  return {
-    userId: workout.userId,
-    completedAt: workout.completedAt.toDate().toISOString(),
-    imageUrl: workout.imageUrl,
-    note: workout.note,
-  };
-}
-
-function convertSquadMembersToUsers(members: SquadMemberDocument[]): User[] {
-  return members.map((member) => ({
-    id: member.userId,
-    name: member.name,
-    initials: member.initials,
-    avatarUrl: member.avatarUrl,
-  }));
-}
-
-async function loadDashboardData() {
-  if (!appUserId.value) {
-    console.warn("App user not bound, cannot load data");
-    return;
-  }
-
-  try {
-    loading.value = true;
-    error.value = null;
-
-    const data = await getDashboardData(appUserId.value, CURRENT_SQUAD_ID);
-
-    if (data.userStats) {
-      history.value = convertUserDailyStatsToHistory(data.userStats);
-      streak.value = calculateStreak(data.userStats);
-    }
-
-    if (data.todayWorkouts) {
-      todaysRecords.value = data.todayWorkouts.map(
-        convertWorkoutDocumentToRecord
-      );
-    }
-
-    if (data.members) {
-      users.value = convertSquadMembersToUsers(data.members);
-    }
-
-    console.log("Dashboard data loaded successfully", {
-      userId: appUserId.value,
-      history: history.value.length,
-      todayWorkouts: todaysRecords.value.length,
-      users: users.value.length,
-      streak: streak.value,
-    });
-  } catch (err) {
-    console.error("Failed to load dashboard data:", err);
-    error.value = "Failed to load data, please refresh the page";
-  } finally {
-    loading.value = false;
-  }
-}
-
-// Setup realtime listener for today's workout records
-function setupRealtimeWorkouts() {
-  const today = getTodayString();
-  const workoutsRef = collection(db, "workouts");
-  const q = query(
-    workoutsRef,
-    where("squadId", "==", CURRENT_SQUAD_ID),
-    where("date", "==", today),
-    firestoreOrderBy("completedAt", "desc")
-  );
-
-  unsubscribeWorkouts = onSnapshot(
-    q,
-    (snapshot) => {
-      todaysRecords.value = snapshot.docs.map((doc) => {
-        const workout = doc.data() as WorkoutDocument;
-        return convertWorkoutDocumentToRecord(workout);
-      });
-      console.log(
-        "Today's workout records updated:",
-        todaysRecords.value.length
-      );
-    },
-    (err) => {
-      console.error("Realtime listener failed:", err);
-    }
-  );
-}
-
-// Watch appUserId changes
-watch(appUserId, async (newAppUserId) => {
-  if (newAppUserId) {
-    console.log("App user bound:", newAppUserId);
-    await loadDashboardData();
-    setupRealtimeWorkouts();
-  } else {
-    console.log("App user not bound");
-    // Cleanup data
-    history.value = [];
-    todaysRecords.value = [];
-    users.value = [];
-    streak.value = 0;
-    if (unsubscribeWorkouts) {
-      unsubscribeWorkouts();
-      unsubscribeWorkouts = null;
-    }
-  }
-});
-
-// Initialize Data
-onMounted(async () => {
-  if (appUserId.value) {
-    await loadDashboardData();
-    setupRealtimeWorkouts();
-  }
-});
-
-// Cleanup
-onUnmounted(() => {
-  if (unsubscribeWorkouts) {
-    unsubscribeWorkouts();
-  }
-});
-
-// Handlers
 const handleCheckIn = async (data: { file: File; note: string }) => {
-  if (!appUserId.value) {
-    alert("Please login and select your profile first");
-    return;
-  }
-
   try {
-    uploading.value = true;
-
-    // Validate file
-    const validation = validateFile(data.file);
-    if (!validation.valid) {
-      alert(validation.error);
-      return;
-    }
-
-    // 1. Upload image to Storage
-    console.log("Starting image upload...");
-    const imageUrl = await uploadWorkoutImage(
-      data.file,
-      appUserId.value,
-      CURRENT_SQUAD_ID
-    );
-    console.log("Image upload successful:", imageUrl);
-
-    // 2. Create workout record in Firestore
-    console.log("Creating workout record...");
-    const workoutId = await createWorkout(
-      appUserId.value,
-      CURRENT_SQUAD_ID,
-      imageUrl,
-      data.note
-    );
-    console.log("Check-in successful!", workoutId);
-
-    // Realtime listener will auto-update UI, no manual update needed
+    await checkIn(data);
   } catch (err) {
-    console.error("Check-in failed:", err);
-    alert("Check-in failed, please try again later");
-  } finally {
-    uploading.value = false;
+    const errorMessage =
+      err instanceof Error
+        ? err.message
+        : "Check-in failed, please try again later";
+    alert(errorMessage);
   }
 };
 
