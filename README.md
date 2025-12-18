@@ -4,11 +4,13 @@ A workout tracking app for Hyrox training built with Vue, TypeScript, and Vite.
 
 ## Features
 
-- 📊 Training history heatmap
-- 🔥 Streak tracking
-- 👥 Team progress dashboard
-- 📸 Photo check-in
-- ✏️ Editable daily missions
+- Training history heatmap
+- Streak tracking
+- Team progress dashboard
+- Photo check-in
+- Editable daily missions
+- Firebase Authentication
+- Firestore Database
 
 ## Tech Stack
 
@@ -17,3 +19,4 @@ A workout tracking app for Hyrox training built with Vue, TypeScript, and Vite.
 - Vite 6
 - Tailwind CSS v4
 - Lucide Vue Next
+- Firebase (Auth + Firestore + Storage)

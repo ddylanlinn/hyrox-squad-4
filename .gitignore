@@ -28,4 +28,4 @@ serviceAccountKey.json
 .env.local
 .env.*.local
 
-.doc/
+.docs/
