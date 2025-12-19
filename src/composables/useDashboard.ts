@@ -159,6 +159,38 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
     }
   });
 
+  /**
+   * Wait for check-in update to appear in realtime listener
+   * This allows the loading state to stay active until UI actually updates
+   * @param timeoutMs - Maximum time to wait (default: 10000ms)
+   * @returns Promise that resolves when new record is detected or timeout
+   */
+  function waitForCheckInUpdate(timeoutMs = 10000): Promise<void> {
+    return new Promise((resolve) => {
+      const currentCount = todaysRecords.value.length;
+
+      // Watch for changes in todaysRecords
+      const stopWatch = watch(
+        todaysRecords,
+        (newRecords) => {
+          if (newRecords.length > currentCount) {
+            console.log("Check-in detected in realtime listener");
+            stopWatch();
+            resolve();
+          }
+        },
+        { deep: true }
+      );
+
+      // Timeout fallback to prevent infinite waiting
+      setTimeout(() => {
+        console.log("waitForCheckInUpdate timeout reached");
+        stopWatch();
+        resolve();
+      }, timeoutMs);
+    });
+  }
+
   return {
     // State
     loading,
@@ -171,5 +203,6 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
     // Methods
     loadDashboardData,
     initialize,
+    waitForCheckInUpdate,
   };
 }

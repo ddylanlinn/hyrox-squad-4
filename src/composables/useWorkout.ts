@@ -5,6 +5,8 @@ import { uploadWorkoutImage, validateFile } from "../services/storage";
 interface UseWorkoutOptions {
   appUserId: Ref<string | null>;
   squadId: string;
+  /** Optional callback to wait for realtime update after check-in */
+  waitForUpdate?: () => Promise<void>;
 }
 
 interface CheckInData {
@@ -15,7 +17,11 @@ interface CheckInData {
 /**
  * Composable for managing workout check-in operations
  */
-export function useWorkout({ appUserId, squadId }: UseWorkoutOptions) {
+export function useWorkout({
+  appUserId,
+  squadId,
+  waitForUpdate,
+}: UseWorkoutOptions) {
   const uploading = ref(false);
 
   /**
@@ -59,7 +65,12 @@ export function useWorkout({ appUserId, squadId }: UseWorkoutOptions) {
         squadStreak: result.squadStreak,
       });
 
-      // Note: Realtime listener will auto-update UI, no manual update needed
+      // 3. Wait for realtime listener to update UI (if callback provided)
+      if (waitForUpdate) {
+        console.log("Waiting for realtime update...");
+        await waitForUpdate();
+        console.log("Realtime update detected");
+      }
     } finally {
       uploading.value = false;
     }

@@ -26,11 +26,11 @@
       />
       <button
         @click="handleCheckInClick"
-        :disabled="loading"
+        :disabled="uploading"
         class="checkin-button"
       >
-        <template v-if="loading">
-          <Loader2 class="animate-spin" /> Uploading...
+        <template v-if="uploading">
+          <Loader2 class="uploading-spinner" /> Uploading...
         </template>
         <template v-else>
           <Camera :size="24" />
@@ -76,6 +76,7 @@ import {
 interface Props {
   isCompleted: boolean;
   completedCount: number;
+  uploading: boolean;
 }
 
 const props = defineProps<Props>();
@@ -85,7 +86,7 @@ const emit = defineEmits<{
 }>();
 
 const fileInputRef = ref<HTMLInputElement | null>(null);
-const loading = ref(false);
+
 const copied = ref(false);
 const noteContent = ref("");
 
@@ -102,16 +103,14 @@ const handleCheckInClick = () => {
 const handleFileChange = (e: Event) => {
   const target = e.target as HTMLInputElement;
   if (target.files && target.files[0]) {
-    loading.value = true;
-    setTimeout(() => {
-      emit("check-in", {
-        file: target.files![0],
-        note: noteContent.value || DEFAULT_WORKOUT_NOTE,
-      });
-      loading.value = false;
-      // Clear note after successful check-in
-      noteContent.value = "";
-    }, 1500);
+    emit("check-in", {
+      file: target.files[0],
+      note: noteContent.value || DEFAULT_WORKOUT_NOTE,
+    });
+    // Clear note after emitting check-in
+    noteContent.value = "";
+    // Clear file input to allow re-selecting same file
+    target.value = "";
   }
 };
 
@@ -172,11 +171,30 @@ const handleNudge = () => {
   justify-content: center;
   gap: 0.75rem;
   box-shadow: var(--shadow-button);
-  transition: transform 0.2s;
+  transition: transform 0.2s, opacity 0.2s;
 }
 
-.checkin-button:active {
+.checkin-button:active:not(:disabled) {
   transform: scale(0.95);
+}
+
+.checkin-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+/* Uploading spinner animation */
+.uploading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ========== Nudge Button ========== */
