@@ -1,5 +1,5 @@
 import { ref, type Ref } from "vue";
-import { createWorkout } from "../services/firestore";
+import { executeCheckIn } from "../services/firestore";
 import { uploadWorkoutImage, validateFile } from "../services/storage";
 
 interface UseWorkoutOptions {
@@ -45,15 +45,19 @@ export function useWorkout({ appUserId, squadId }: UseWorkoutOptions) {
       );
       console.log("Image upload successful:", imageUrl);
 
-      // 2. Create workout record in Firestore
-      console.log("Creating workout record...");
-      const workoutId = await createWorkout(
-        appUserId.value,
+      // 2. Execute check-in workflow (creates workout + updates streaks)
+      console.log("Executing check-in workflow...");
+      const result = await executeCheckIn({
+        userId: appUserId.value,
         squadId,
         imageUrl,
-        data.note
-      );
-      console.log("Check-in successful!", workoutId);
+        note: data.note,
+      });
+      console.log("Check-in successful!", {
+        workoutId: result.workoutId,
+        personalStreak: result.personalStreak,
+        squadStreak: result.squadStreak,
+      });
 
       // Note: Realtime listener will auto-update UI, no manual update needed
     } finally {

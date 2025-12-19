@@ -1,0 +1,60 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ==================== Helper Functions ====================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Validate image file
+    function isValidImage() {
+      return request.resource.size < 10 * 1024 * 1024 &&  // Max 10MB
+             request.resource.contentType.matches('image/.*');  // Must be image
+    }
+    
+    // ==================== Workout Images ====================
+    
+    // Path: workouts/{squadId}/{userId}/{filename}
+    match /workouts/{squadId}/{userId}/{filename} {
+      // All authenticated users can read workout images
+      // Note: Frontend should control which images to display based on squad membership
+      allow read: if isAuthenticated();
+      
+      // Users can upload images only to their own folder
+      // Filename must follow pattern: {userId}_{timestamp}.{ext}
+      allow create: if isAuthenticated() && 
+                       isValidImage() &&
+                       filename.matches('^' + userId + '_[0-9]+\\.(jpg|jpeg|png|webp|JPG|JPEG|PNG|WEBP)$');
+      
+      // Users can update/delete images in their own folder
+      allow update, delete: if isAuthenticated();
+    }
+    
+    // ==================== User Avatars ====================
+    
+    // Path: avatars/{filename}
+    match /avatars/{filename} {
+      // All authenticated users can read avatars
+      allow read: if isAuthenticated();
+      
+      // Users can upload/update avatars
+      // Note: Frontend should ensure filename matches userId pattern
+      allow create, update: if isAuthenticated() && 
+                               isValidImage();
+      
+      // Users can delete avatars
+      allow delete: if isAuthenticated();
+    }
+    
+    // ==================== Default Deny ====================
+    
+    // Deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

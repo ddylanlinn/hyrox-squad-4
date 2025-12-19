@@ -1,7 +1,0 @@
-{
-  "name": "Hyrox Squad 4",
-  "description": "A high-intensity squad tracking app for Hyrox training.",
-  "requestFramePermissions": [
-    "camera"
-  ]
-}

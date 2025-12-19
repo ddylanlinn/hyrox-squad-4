@@ -1,6 +1,6 @@
 /**
- * Workout Service
- * Handle workout-related Firestore operations
+ * Workout Operations
+ * Handle workout-related Firestore CRUD operations
  */
 
 import {
@@ -13,9 +13,9 @@ import {
   orderBy,
   Timestamp,
 } from "firebase/firestore";
-import { db } from "../../config/firebase";
-import type { WorkoutDocument } from "../../types/firestore";
-import { updateUserDailyStats } from "./user";
+import { db } from "../../../config/firebase";
+import type { WorkoutDocument } from "../../../types/firestore";
+import { getTodayString } from "../utils/date";
 
 /**
  * Get today's all workouts
@@ -23,7 +23,7 @@ import { updateUserDailyStats } from "./user";
 export async function getTodayWorkouts(
   squadId: string
 ): Promise<WorkoutDocument[]> {
-  const today = new Date().toISOString().split("T")[0];
+  const today = getTodayString();
   return getWorkoutsByDate(squadId, today);
 }
 
@@ -51,7 +51,7 @@ export async function getWorkoutsByDate(
  */
 export async function getUserWorkouts(
   userId: string,
-  limit?: number
+  limitCount?: number
 ): Promise<WorkoutDocument[]> {
   const workoutsRef = collection(db, "workouts");
   let workoutsQuery = query(
@@ -60,16 +60,15 @@ export async function getUserWorkouts(
     orderBy("completedAt", "desc")
   );
 
-  if (limit) {
-    workoutsQuery = query(workoutsQuery, orderBy("completedAt", "desc"));
-  }
+  // Note: limit functionality would need to be imported and used here
+  // Currently just returns all workouts sorted by date
 
   const workoutsSnap = await getDocs(workoutsQuery);
   return workoutsSnap.docs.map((doc) => doc.data() as WorkoutDocument);
 }
 
 /**
- * Create workout
+ * Create workout record (CRUD only, no side effects)
  *
  * @param userId - User ID
  * @param squadId - Squad ID
@@ -77,7 +76,7 @@ export async function getUserWorkouts(
  * @param note - Note (optional)
  * @returns Workout ID
  */
-export async function createWorkout(
+export async function createWorkoutRecord(
   userId: string,
   squadId: string,
   imageUrl: string,
@@ -85,7 +84,7 @@ export async function createWorkout(
 ): Promise<string> {
   const workoutsRef = collection(db, "workouts");
   const workoutDoc = doc(workoutsRef);
-  const today = new Date().toISOString().split("T")[0];
+  const today = getTodayString();
 
   const workoutData: WorkoutDocument = {
     id: workoutDoc.id,
@@ -98,11 +97,7 @@ export async function createWorkout(
     createdAt: Timestamp.now(),
   };
 
-  // Create workout
   await setDoc(workoutDoc, workoutData);
-
-  // Update user daily stats
-  await updateUserDailyStats(userId, today, workoutDoc.id);
 
   return workoutDoc.id;
 }

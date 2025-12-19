@@ -1,6 +1,6 @@
 /**
- * Squad Service
- * Handle squad-related Firestore operations
+ * Squad Operations
+ * Handle squad-related Firestore CRUD operations
  */
 
 import {
@@ -13,8 +13,11 @@ import {
   orderBy,
   Timestamp,
 } from "firebase/firestore";
-import { db } from "../../config/firebase";
-import type { SquadDocument, SquadMemberDocument } from "../../types/firestore";
+import { db } from "../../../config/firebase";
+import type {
+  SquadDocument,
+  SquadMemberDocument,
+} from "../../../types/firestore";
 
 /**
  * Get squad data
@@ -54,6 +57,21 @@ export async function updateSquad(
   await updateDoc(squadRef, {
     ...data,
     updatedAt: Timestamp.now(),
+  });
+}
+
+/**
+ * Update squad streak
+ */
+export async function updateSquadStreak(
+  squadId: string,
+  currentStreak: number,
+  averageStreak: number
+): Promise<void> {
+  await updateSquad(squadId, {
+    currentStreak,
+    averageStreak,
+    lastActivityDate: new Date().toISOString().split("T")[0],
   });
 }
 

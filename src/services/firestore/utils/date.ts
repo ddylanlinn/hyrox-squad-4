@@ -1,63 +1,7 @@
 /**
- * Firestore Helper Functions
- * Helper functions and utility methods
+ * Date Utility Functions
+ * Helper functions for date manipulation and formatting
  */
-
-import type { UserDailyStats } from "../../types/firestore";
-
-/**
- * Calculate streak
- *
- * @param stats - User daily stats array (should be sorted by date in descending order)
- * @returns Streak count
- */
-export function calculateStreak(stats: UserDailyStats[]): number {
-  if (stats.length === 0) return 0;
-
-  // Ensure sorted by date in descending order
-  const sortedStats = [...stats].sort((a, b) => b.date.localeCompare(a.date));
-
-  let streak = 0;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  for (const stat of sortedStats) {
-    const statDate = new Date(stat.date);
-    statDate.setHours(0, 0, 0, 0);
-
-    const daysDiff = Math.floor(
-      (today.getTime() - statDate.getTime()) / (1000 * 60 * 60 * 24)
-    );
-
-    // Check if consecutive and has workout record
-    if (daysDiff === streak && stat.count > 0) {
-      streak++;
-    } else {
-      break;
-    }
-  }
-
-  return streak;
-}
-
-/**
- * Calculate days until competition
- *
- * @param competitionDate - Competition date (YYYY-MM-DD)
- * @returns Days until competition (negative number if expired)
- */
-export function calculateDaysUntilCompetition(competitionDate: string): number {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const competition = new Date(competitionDate);
-  competition.setHours(0, 0, 0, 0);
-
-  const diffTime = competition.getTime() - today.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  return diffDays;
-}
 
 /**
  * Get today's date string
@@ -135,4 +79,23 @@ export function isToday(dateString: string): boolean {
  */
 export function isYesterday(dateString: string): boolean {
   return dateString === getDaysAgo(1);
+}
+
+/**
+ * Calculate days until competition
+ *
+ * @param competitionDate - Competition date (YYYY-MM-DD)
+ * @returns Days until competition (negative number if expired)
+ */
+export function calculateDaysUntilCompetition(competitionDate: string): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const competition = new Date(competitionDate);
+  competition.setHours(0, 0, 0, 0);
+
+  const diffTime = competition.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  return diffDays;
 }

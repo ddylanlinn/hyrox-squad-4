@@ -1,6 +1,6 @@
 /**
- * User Service
- * Handle user-related Firestore operations
+ * User Operations
+ * Handle user-related Firestore CRUD operations
  */
 
 import {
@@ -15,8 +15,8 @@ import {
   limit,
   Timestamp,
 } from "firebase/firestore";
-import { db } from "../../config/firebase";
-import type { UserDocument, UserDailyStats } from "../../types/firestore";
+import { db } from "../../../config/firebase";
+import type { UserDocument, UserDailyStats } from "../../../types/firestore";
 
 /**
  * Get user data
@@ -75,6 +75,21 @@ export async function updateUser(
   await updateDoc(userRef, {
     ...data,
     updatedAt: Timestamp.now(),
+  });
+}
+
+/**
+ * Update user streak
+ */
+export async function updateUserStreak(
+  userId: string,
+  currentStreak: number,
+  longestStreak: number
+): Promise<void> {
+  await updateUser(userId, {
+    currentStreak,
+    longestStreak,
+    lastWorkoutDate: new Date().toISOString().split("T")[0],
   });
 }
 

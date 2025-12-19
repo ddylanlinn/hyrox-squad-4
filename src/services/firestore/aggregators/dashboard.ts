@@ -1,18 +1,18 @@
 /**
- * Dashboard Service
+ * Dashboard Aggregator
  * Aggregates multiple data sources to provide complete dashboard data
  */
 
-import { getSquad, getSquadMembers } from "./squad";
-import { getUser, getUserStats } from "./user";
-import { getTodayWorkouts } from "./workout";
+import { getSquad, getSquadMembers } from "../operations/squad";
+import { getUser, getUserStats } from "../operations/user";
+import { getTodayWorkouts } from "../operations/workout";
 import type {
   SquadDocument,
   SquadMemberDocument,
   UserDocument,
   UserDailyStats,
   WorkoutDocument,
-} from "../../types/firestore";
+} from "../../../types/firestore";
 
 /**
  * Dashboard data interface
@@ -60,7 +60,7 @@ export async function getDashboardData(
 
 /**
  * Get squad dashboard data (without individual stats)
- * 
+ *
  * @param squadId - Squad ID
  * @returns Squad dashboard data
  */

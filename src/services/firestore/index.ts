@@ -3,16 +3,30 @@
  * Export all Firestore related operations
  *
  * Usage example:
- * import { getDashboardData, createWorkout } from '@/services/firestore';
+ * import { getDashboardData, executeCheckIn } from '@/services/firestore';
  */
 
-// Squad Operations
+// ============================================================
+// Workflows (Preferred API for business operations)
+// ============================================================
 export {
-  getSquad,
-  getSquadMembers,
-  updateSquad,
-  updateSquadMember,
-} from "./squad";
+  executeCheckIn,
+  type CheckInInput,
+  type CheckInResult,
+} from "./workflows/checkIn";
+
+// ============================================================
+// Aggregators (Data fetching)
+// ============================================================
+export {
+  getDashboardData,
+  getSquadDashboardData,
+  type DashboardData,
+} from "./aggregators/dashboard";
+
+// ============================================================
+// Operations (Direct CRUD access when needed)
+// ============================================================
 
 // User Operations
 export {
@@ -20,33 +34,46 @@ export {
   getUserStats,
   getUserStatsByDate,
   updateUser,
+  updateUserStreak,
   updateUserDailyStats,
-} from "./user";
+} from "./operations/user";
+
+// Squad Operations
+export {
+  getSquad,
+  getSquadMembers,
+  updateSquad,
+  updateSquadStreak,
+  updateSquadMember,
+} from "./operations/squad";
 
 // Workout Operations
 export {
   getTodayWorkouts,
   getWorkoutsByDate,
   getUserWorkouts,
-  createWorkout,
+  createWorkoutRecord,
   deleteWorkout,
-} from "./workout";
+} from "./operations/workout";
 
-// Dashboard
-export {
-  getDashboardData,
-  getSquadDashboardData,
-  type DashboardData,
-} from "./dashboard";
-
-// Helper Functions
+// ============================================================
+// Calculators (Pure functions)
+// ============================================================
 export {
   calculateStreak,
-  calculateDaysUntilCompetition,
+  calculateSquadStreak,
+  calculateAverageStreak,
+} from "./calculators/streak";
+
+// ============================================================
+// Utils (Helper functions)
+// ============================================================
+export {
   getTodayString,
   getDaysAgo,
   generateDateRange,
   formatDate,
   isToday,
   isYesterday,
-} from "./helpers";
+  calculateDaysUntilCompetition,
+} from "./utils/date";
