@@ -71,9 +71,9 @@ export async function uploadWorkoutImage(
   const compressedFile = await compressImage(file);
 
   // Generate unique filename
+  // Use .jpg extension since compressImage always outputs JPEG format
   const timestamp = Date.now();
-  const extension = compressedFile.name.split(".").pop();
-  const fileName = `${userId}_${timestamp}.${extension}`;
+  const fileName = `${userId}_${timestamp}.jpg`;
 
   // Create storage path
   const storagePath = `workouts/${squadId}/${userId}/${fileName}`;
@@ -128,8 +128,8 @@ export async function uploadUserAvatar(
   // Compress image
   const compressedFile = await compressImage(file);
 
-  const extension = compressedFile.name.split(".").pop();
-  const fileName = `${userId}.${extension}`;
+  // Use .jpg extension since compressImage always outputs JPEG format
+  const fileName = `${userId}.jpg`;
   const storagePath = `avatars/${fileName}`;
   const storageRef = ref(storage, storagePath);
 
