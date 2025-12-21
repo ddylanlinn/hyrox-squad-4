@@ -71,6 +71,7 @@ import { computed } from "vue";
 import { Flame, Zap } from "lucide-vue-next";
 import type { DailyStats } from "../types";
 import { COMPETITION_DATE, HEATMAP_DAYS_COUNT } from "../constants";
+import { getTodayString, toLocalDateString } from "../services/firestore";
 
 interface Props {
   history: DailyStats[];
@@ -94,39 +95,35 @@ const daysUntilRace = computed(() => {
 const displayHistory = computed(() => {
   const result: DailyStats[] = [];
   const raceDay = new Date(COMPETITION_DATE);
+  const todayString = getTodayString();
 
-  // Generate days: from D-(HEATMAP_DAYS_COUNT-1) to D-1
-  for (let i = HEATMAP_DAYS_COUNT - 1; i >= 1; i--) {
+  // Generate days: from D-(HEATMAP_DAYS_COUNT-1) to D-0 (race day)
+  for (let i = HEATMAP_DAYS_COUNT - 1; i >= 0; i--) {
     const d = new Date(raceDay);
     d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split("T")[0];
+    const dateStr = toLocalDateString(d);
 
-    // Find matching history data or create empty
+    // Find matching history data
     const existingDay = props.history.find((h) => h.date === dateStr);
-    result.push(
-      existingDay || {
-        date: dateStr,
-        count: 0,
-        records: [],
-      }
-    );
-  }
 
-  // Add race day itself as the last item (D-0)
-  result.push({
-    date: new Date(COMPETITION_DATE).toISOString().split("T")[0],
-    count: 0,
-    records: [],
-  });
+    if (existingDay) {
+      result.push(existingDay);
+    } else {
+      // Create empty day, but use todayCount if it's today
+      result.push({
+        date: dateStr,
+        count: dateStr === todayString ? props.todayCount : 0,
+        records: [],
+      });
+    }
+  }
 
   return result;
 });
 
 // Check if a date is today
 const isToday = (dateStr: string): boolean => {
-  const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
-  return dateStr === todayStr;
+  return dateStr === getTodayString();
 };
 
 const getColorClass = (count: number): string => {

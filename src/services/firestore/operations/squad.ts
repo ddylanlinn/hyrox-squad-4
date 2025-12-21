@@ -3,20 +3,12 @@
  * Handle squad-related Firestore CRUD operations
  */
 
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  updateDoc,
-  query,
-  orderBy,
-  Timestamp,
-} from "firebase/firestore";
+import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
 import { db } from "../../../config/firebase";
 import type {
   SquadDocument,
   SquadMemberDocument,
+  UserDocument,
 } from "../../../types/firestore";
 
 /**
@@ -33,17 +25,67 @@ export async function getSquad(squadId: string): Promise<SquadDocument | null> {
 }
 
 /**
- * Get squad members list
+ * Get squad members list with real-time data from users collection
  * Sort by consecutive days in descending order
+ *
+ * This function reads member data from:
+ * - users/{userId} for real-time stats (currentStreak, totalWorkouts, etc.)
+ * - squads/{squadId}/members/{userId} for squad-specific info (joinedAt, role)
  */
 export async function getSquadMembers(
   squadId: string
 ): Promise<SquadMemberDocument[]> {
-  const membersRef = collection(db, "squads", squadId, "members");
-  const membersQuery = query(membersRef, orderBy("currentStreak", "desc"));
-  const membersSnap = await getDocs(membersQuery);
+  // First, get the squad to get memberIds
+  const squad = await getSquad(squadId);
+  if (!squad || !squad.memberIds || squad.memberIds.length === 0) {
+    return [];
+  }
 
-  return membersSnap.docs.map((doc) => doc.data() as SquadMemberDocument);
+  // Fetch all member data in parallel
+  const memberPromises = squad.memberIds.map(async (userId) => {
+    // Get user data (real-time stats)
+    const userRef = doc(db, "users", userId);
+    const userSnap = await getDoc(userRef);
+
+    // Get squad member subcollection data (joinedAt, role)
+    const memberRef = doc(db, "squads", squadId, "members", userId);
+    const memberSnap = await getDoc(memberRef);
+
+    if (!userSnap.exists()) {
+      return null; // User not found, skip
+    }
+
+    const userData = userSnap.data() as UserDocument;
+    const memberData = memberSnap.exists()
+      ? memberSnap.data()
+      : { role: "member" as const }; // Default role if subcollection doesn't exist
+
+    // Combine data into SquadMemberDocument
+    const memberDoc: SquadMemberDocument = {
+      userId: userData.id,
+      squadId,
+      joinedAt: memberData.joinedAt || Timestamp.now(),
+      role: memberData.role || "member",
+      // Real-time stats from user document
+      currentStreak: userData.currentStreak || 0,
+      totalWorkouts: userData.totalWorkouts || 0,
+      lastWorkoutDate: userData.lastWorkoutDate,
+      // User basic data
+      name: userData.name,
+      initials: userData.initials,
+      avatarUrl: userData.avatarUrl,
+    };
+
+    return memberDoc;
+  });
+
+  // Wait for all members and filter out nulls
+  const members = (await Promise.all(memberPromises)).filter(
+    (member): member is SquadMemberDocument => member !== null
+  );
+
+  // Sort by currentStreak in descending order
+  return members.sort((a, b) => b.currentStreak - a.currentStreak);
 }
 
 /**
@@ -73,16 +115,4 @@ export async function updateSquadStreak(
     averageStreak,
     lastActivityDate: new Date().toISOString().split("T")[0],
   });
-}
-
-/**
- * Update squad member data
- */
-export async function updateSquadMember(
-  squadId: string,
-  userId: string,
-  data: Partial<SquadMemberDocument>
-): Promise<void> {
-  const memberRef = doc(db, "squads", squadId, "members", userId);
-  await updateDoc(memberRef, data);
 }

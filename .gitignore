@@ -29,3 +29,4 @@ serviceAccountKey.json
 .env.*.local
 
 .docs/
+.claude

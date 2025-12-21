@@ -11,14 +11,11 @@ import { createWorkoutRecord } from "../operations/workout";
 import {
   getUser,
   getUserStats,
+  getUserStatsByDate,
   updateUserDailyStats,
   updateUserStreak,
 } from "../operations/user";
-import {
-  getSquad,
-  getSquadMembers,
-  updateSquadStreak,
-} from "../operations/squad";
+import { getSquad, updateSquadStreak, updateSquad } from "../operations/squad";
 import {
   calculateStreak,
   calculateSquadStreak,
@@ -52,19 +49,27 @@ export interface CheckInResult {
  * Execute complete check-in workflow
  *
  * This function orchestrates:
- * 1. Create workout record
- * 2. Update user daily stats
- * 3. Calculate and update personal streak
- * 4. Calculate and update squad streak
+ * 1. Validate not already checked in today
+ * 2. Create workout record
+ * 3. Update user daily stats
+ * 4. Calculate and update personal streak
+ * 5. Calculate and update squad streak
  *
  * @param input - Check-in input data
  * @returns Check-in result with all updated streaks
+ * @throws Error if user has already checked in today
  */
 export async function executeCheckIn(
   input: CheckInInput
 ): Promise<CheckInResult> {
   const { userId, squadId, imageUrl, note } = input;
   const today = getTodayString();
+
+  // Step 0: Pre-check - Has user already checked in today?
+  const existingStats = await getUserStatsByDate(userId, today);
+  if (existingStats && existingStats.count > 0) {
+    throw new Error("You have already checked in today");
+  }
 
   // Step 1: Create workout record
   const workoutId = await createWorkoutRecord(userId, squadId, imageUrl, note);
@@ -87,6 +92,19 @@ export async function executeCheckIn(
     squadStreak,
     squadAverageStreak,
   });
+
+  // Step 5: Increment squad totalWorkouts
+  const squad = await getSquad(squadId);
+  if (squad) {
+    await updateSquad(squadId, {
+      totalWorkouts: (squad.totalWorkouts || 0) + 1,
+    });
+    console.log(
+      `Incremented squad ${squadId} totalWorkouts: ${
+        (squad.totalWorkouts || 0) + 1
+      }`
+    );
+  }
 
   return {
     workoutId,
@@ -132,8 +150,13 @@ async function refreshSquadStreak(squadId: string): Promise<{
     return { squadStreak: 0, squadAverageStreak: 0 };
   }
 
-  const members = await getSquadMembers(squadId);
-  const memberIds = members.map((m) => m.userId);
+  // Use memberIds from squad document directly
+  const memberIds = squad.memberIds;
+
+  if (!memberIds || memberIds.length === 0) {
+    console.warn(`Squad ${squadId} has no members`);
+    return { squadStreak: 0, squadAverageStreak: 0 };
+  }
 
   // Get all members' stats
   const memberStatsMap = new Map<string, UserDailyStats[]>();
@@ -145,6 +168,12 @@ async function refreshSquadStreak(squadId: string): Promise<{
   // Calculate streaks
   const squadStreak = calculateSquadStreak(memberStatsMap, memberIds);
   const squadAverageStreak = calculateAverageStreak(memberStatsMap);
+
+  console.log(`Calculated squad streaks for ${squadId}:`, {
+    squadStreak,
+    squadAverageStreak,
+    memberCount: memberIds.length,
+  });
 
   // Persist to Firestore
   await updateSquadStreak(squadId, squadStreak, squadAverageStreak);

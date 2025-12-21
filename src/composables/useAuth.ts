@@ -69,13 +69,14 @@ export function useAuth(): UseAuthReturn {
   }
 
   // Listen to auth state changes
-  onMounted(() => {
+  onMounted(async () => {
     // Get current user first (if any)
     const currentUser = getCurrentUser();
     user.value = currentUser;
 
     if (currentUser) {
-      checkBinding(currentUser);
+      await checkBinding(currentUser);
+      loading.value = false;
     } else {
       loading.value = false;
     }

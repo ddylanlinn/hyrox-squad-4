@@ -4,48 +4,55 @@
  */
 
 import type { UserDailyStats } from "../../../types/firestore";
-import { getTodayString } from "../utils/date";
+import { getTodayString, toLocalDateString } from "../utils/date";
 
 /**
  * Calculate personal streak
  *
- * @param stats - User daily stats array (should be sorted by date in descending order)
+ * Algorithm:
+ * - Count consecutive days backwards from today (or yesterday if no record today)
+ * - Use Map for O(1) lookup performance
+ * - Handle timezone correctly with local date strings
+ *
+ * @param stats - User daily stats array (can be unsorted)
  * @returns Streak count
  */
 export function calculateStreak(stats: UserDailyStats[]): number {
   if (stats.length === 0) return 0;
 
-  // Ensure sorted by date in descending order
-  const sortedStats = [...stats].sort((a, b) => b.date.localeCompare(a.date));
-
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const todayString = getTodayString();
 
+  // Build a Map for O(1) lookup - only include days with workouts
+  const statsMap = new Map<string, UserDailyStats>();
+  for (const stat of stats) {
+    if (stat.count > 0) {
+      statsMap.set(stat.date, stat);
+    }
+  }
+
   // Check if today has a record
-  const hasTodayRecord = sortedStats.some(
-    (stat) => stat.date === todayString && stat.count > 0
-  );
+  const hasTodayRecord = statsMap.has(todayString);
 
-  // If today has no record, start counting from yesterday (give 1-day grace period)
-  // If today has a record, start counting from today
   let streak = 0;
-  const startDayOffset = hasTodayRecord ? 0 : 1;
+  let checkDate = new Date(today);
 
-  for (const stat of sortedStats) {
-    const statDate = new Date(stat.date);
-    statDate.setHours(0, 0, 0, 0);
+  // If no record today, start from yesterday (1-day grace period)
+  if (!hasTodayRecord) {
+    checkDate.setDate(checkDate.getDate() - 1);
+  }
 
-    const daysDiff = Math.floor(
-      (today.getTime() - statDate.getTime()) / (1000 * 60 * 60 * 24)
-    );
+  // Count consecutive days backwards
+  while (streak < 365) {
+    // Safety limit
+    const dateString = toLocalDateString(checkDate);
 
-    // Start counting from startDayOffset (0 if checked in today, 1 if not)
-    // Check if consecutive and has workout record
-    if (daysDiff === streak + startDayOffset && stat.count > 0) {
+    if (statsMap.has(dateString)) {
       streak++;
-    } else if (daysDiff > streak + startDayOffset) {
-      // If we've passed the expected date, stop counting
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else {
+      // Break when we hit a gap
       break;
     }
   }
@@ -56,6 +63,11 @@ export function calculateStreak(stats: UserDailyStats[]): number {
 /**
  * Calculate squad streak
  * Squad streak counts consecutive days where ALL members have checked in
+ *
+ * Algorithm:
+ * - Count backwards from today (or yesterday if not all members checked in today)
+ * - For each day, verify ALL members have workout records
+ * - Stop at first day where any member is missing
  *
  * @param memberStats - Map of userId to their daily stats array
  * @param memberIds - All member IDs in the squad
@@ -71,33 +83,46 @@ export function calculateSquadStreak(
   today.setHours(0, 0, 0, 0);
   const todayString = getTodayString();
 
-  let squadStreak = 0;
+  // Build Maps for each member for O(1) lookup
+  const memberStatsLookup = new Map<string, Map<string, UserDailyStats>>();
+  for (const [memberId, stats] of memberStats.entries()) {
+    const statsMap = new Map<string, UserDailyStats>();
+    for (const stat of stats) {
+      if (stat.count > 0) {
+        statsMap.set(stat.date, stat);
+      }
+    }
+    memberStatsLookup.set(memberId, statsMap);
+  }
 
   // Check if all members checked in today
   const allCheckedInToday = memberIds.every((memberId) => {
-    const stats = memberStats.get(memberId) || [];
-    return stats.some((stat) => stat.date === todayString && stat.count > 0);
+    const statsMap = memberStatsLookup.get(memberId);
+    return statsMap && statsMap.has(todayString);
   });
 
-  // Start from yesterday if not all members checked in today (1-day grace period)
-  const startDayOffset = allCheckedInToday ? 0 : 1;
+  let squadStreak = 0;
+  let checkDate = new Date(today);
+
+  // If not all members checked in today, start from yesterday (grace period)
+  if (!allCheckedInToday) {
+    checkDate.setDate(checkDate.getDate() - 1);
+  }
 
   // Check consecutive days backwards
-  for (let dayOffset = startDayOffset; dayOffset < 365; dayOffset++) {
-    const checkDate = new Date(today);
-    checkDate.setDate(checkDate.getDate() - dayOffset);
-    const checkDateString = checkDate.toISOString().split("T")[0];
+  while (squadStreak < 365) {
+    // Safety limit
+    const checkDateString = toLocalDateString(checkDate);
 
     // Check if ALL members have checked in on this date
     const allCheckedIn = memberIds.every((memberId) => {
-      const stats = memberStats.get(memberId) || [];
-      return stats.some(
-        (stat) => stat.date === checkDateString && stat.count > 0
-      );
+      const statsMap = memberStatsLookup.get(memberId);
+      return statsMap && statsMap.has(checkDateString);
     });
 
     if (allCheckedIn) {
       squadStreak++;
+      checkDate.setDate(checkDate.getDate() - 1);
     } else {
       break;
     }

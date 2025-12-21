@@ -44,7 +44,6 @@ export {
   getSquadMembers,
   updateSquad,
   updateSquadStreak,
-  updateSquadMember,
 } from "./operations/squad";
 
 // Workout Operations
@@ -76,4 +75,5 @@ export {
   isToday,
   isYesterday,
   calculateDaysUntilCompetition,
+  toLocalDateString,
 } from "./utils/date";

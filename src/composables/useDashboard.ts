@@ -161,21 +161,57 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
 
   /**
    * Wait for check-in update to appear in realtime listener
-   * This allows the loading state to stay active until UI actually updates
-   * @param timeoutMs - Maximum time to wait (default: 10000ms)
-   * @returns Promise that resolves when new record is detected or timeout
+   *
+   * Strategy:
+   * - Monitor changes to current user's record (not just count)
+   * - Detect both new records and updated timestamps
+   * - Include safety timeout to prevent infinite waiting
+   *
+   * @param timeoutMs - Maximum time to wait (default: 5000ms)
+   * @returns Promise that resolves when update is detected or timeout
    */
-  function waitForCheckInUpdate(timeoutMs = 10000): Promise<void> {
+  function waitForCheckInUpdate(timeoutMs = 5000): Promise<void> {
     return new Promise((resolve) => {
-      const currentCount = todaysRecords.value.length;
+      if (!appUserId.value) {
+        resolve();
+        return;
+      }
+
+      // Capture current state
+      const currentUserRecord = todaysRecords.value.find(
+        (r) => r.userId === appUserId.value
+      );
+      const currentTimestamp = currentUserRecord?.completedAt;
+      const hasRecordBefore = !!currentUserRecord;
+
+      let resolved = false;
 
       // Watch for changes in todaysRecords
       const stopWatch = watch(
         todaysRecords,
         (newRecords) => {
-          if (newRecords.length > currentCount) {
-            console.log("Check-in detected in realtime listener");
+          if (resolved) return;
+
+          const newUserRecord = newRecords.find(
+            (r) => r.userId === appUserId.value
+          );
+
+          // Detect change: from no record to has record, or timestamp updated
+          const hasNewRecord = !hasRecordBefore && !!newUserRecord;
+          const hasUpdatedRecord =
+            hasRecordBefore &&
+            newUserRecord &&
+            newUserRecord.completedAt !== currentTimestamp;
+
+          if (hasNewRecord || hasUpdatedRecord) {
+            console.log("Check-in detected in realtime listener", {
+              hasNewRecord,
+              hasUpdatedRecord,
+              newTimestamp: newUserRecord?.completedAt,
+            });
+            resolved = true;
             stopWatch();
+            clearTimeout(timeoutId);
             resolve();
           }
         },
@@ -183,10 +219,13 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
       );
 
       // Timeout fallback to prevent infinite waiting
-      setTimeout(() => {
-        console.log("waitForCheckInUpdate timeout reached");
-        stopWatch();
-        resolve();
+      const timeoutId = setTimeout(() => {
+        if (!resolved) {
+          console.log("waitForCheckInUpdate timeout reached");
+          resolved = true;
+          stopWatch();
+          resolve();
+        }
       }, timeoutMs);
     });
   }

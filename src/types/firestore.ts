@@ -1,4 +1,4 @@
-import { Timestamp } from "firebase-admin/firestore";
+import { Timestamp } from "firebase/firestore";
 
 // ==================== Squad Types ====================
 
@@ -12,7 +12,7 @@ export interface SquadDocument {
 
   // Member information
   memberIds: string[];
-  memberCount: number;
+  memberCount?: number; // Number of members in the squad
   captainId?: string;
 
   // Squad statistics (cached fields)
@@ -25,9 +25,8 @@ export interface SquadDocument {
   targetDailyWorkouts?: number;
 
   // Optional extension fields
-  avatarUrl?: string;
   color?: string;
-  isActive: boolean;
+  isActive?: boolean; // Whether the squad is currently active
 }
 
 export interface SquadMemberDocument {

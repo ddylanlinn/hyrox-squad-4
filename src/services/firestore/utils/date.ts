@@ -4,16 +4,30 @@
  */
 
 /**
- * Get today's date string
+ * Convert Date object to local date string (YYYY-MM-DD)
+ * Uses local timezone instead of UTC to avoid date shift issues
+ *
+ * @param date - Date object
+ * @returns YYYY-MM-DD formatted date string in local timezone
+ */
+export function toLocalDateString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Get today's date string in local timezone
  *
  * @returns YYYY-MM-DD formatted date string
  */
 export function getTodayString(): string {
-  return new Date().toISOString().split("T")[0];
+  return toLocalDateString(new Date());
 }
 
 /**
- * Get the date string for a specified number of days ago
+ * Get the date string for a specified number of days ago in local timezone
  *
  * @param days - Number of days
  * @returns YYYY-MM-DD formatted date string
@@ -21,7 +35,7 @@ export function getTodayString(): string {
 export function getDaysAgo(days: number): string {
   const date = new Date();
   date.setDate(date.getDate() - days);
-  return date.toISOString().split("T")[0];
+  return toLocalDateString(date);
 }
 
 /**
@@ -41,7 +55,7 @@ export function generateDateRange(
 
   const current = new Date(start);
   while (current <= end) {
-    dates.push(current.toISOString().split("T")[0]);
+    dates.push(toLocalDateString(current));
     current.setDate(current.getDate() + 1);
   }
 
