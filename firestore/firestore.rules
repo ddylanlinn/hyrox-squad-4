@@ -112,10 +112,15 @@ service cloud.firestore {
       // All authenticated users can read squad data
       allow read: if hasAuthBinding();
       
-      // Only squad captain can update squad data
-      allow update: if isSquadCaptain(squadId) &&
-                       // Cannot modify memberIds, memberCount directly (managed by members subcollection)
-                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['id', 'createdAt', 'memberIds', 'memberCount']);
+      // Squad members can update statistics fields (totalWorkouts, lastActivityDate, streaks, updatedAt)
+      // Squad captain can update all fields except id, createdAt, memberIds, memberCount
+      allow update: if isSquadMember(squadId) && (
+                       // Members can update only statistics fields (any subset of allowed fields)
+                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['id', 'createdAt', 'memberIds', 'memberCount', 'name', 'description', 'competitionDate', 'captainId', 'targetDailyWorkouts', 'color', 'isActive']) ||
+                       // Captain can update other fields (but not protected ones)
+                       (isSquadCaptain(squadId) &&
+                        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['id', 'createdAt', 'memberIds', 'memberCount']))
+                     );
       
       // Create and delete require admin access (implement via Cloud Functions or admin SDK)
       allow create, delete: if false;
