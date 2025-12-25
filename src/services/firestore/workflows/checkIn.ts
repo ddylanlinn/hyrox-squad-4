@@ -22,6 +22,7 @@ import {
   calculateAverageStreak,
 } from "../calculators/streak";
 import { getTodayString } from "../utils/date";
+import { getBoundMemberIds } from "../../auth/binding";
 import type { UserDailyStats } from "../../../types/firestore";
 
 /**
@@ -130,8 +131,8 @@ async function refreshPersonalStreak(userId: string): Promise<{
   const userData = await getUser(userId);
   const longestStreak = Math.max(personalStreak, userData?.longestStreak || 0);
 
-  // Persist to Firestore
-  await updateUserStreak(userId, personalStreak, longestStreak);
+  // Persist to Firestore (with totalWorkouts increment during check-in)
+  await updateUserStreak(userId, personalStreak, longestStreak, true);
 
   return { personalStreak, longestStreak };
 }
@@ -150,29 +151,39 @@ async function refreshSquadStreak(squadId: string): Promise<{
     return { squadStreak: 0, squadAverageStreak: 0 };
   }
 
-  // Use memberIds from squad document directly
-  const memberIds = squad.memberIds;
+  // Get all member IDs from squad
+  const allMemberIds = squad.memberIds;
 
-  if (!memberIds || memberIds.length === 0) {
+  if (!allMemberIds || allMemberIds.length === 0) {
     console.warn(`Squad ${squadId} has no members`);
     return { squadStreak: 0, squadAverageStreak: 0 };
   }
 
-  // Get all members' stats
+  // Per docs: Only count BOUND members for streak calculation
+  // "如果「所有已綁定登入的使用者」在當天都完成打卡 → streak +1"
+  const boundMemberIds = await getBoundMemberIds(allMemberIds);
+
+  if (boundMemberIds.length === 0) {
+    console.warn(`Squad ${squadId} has no bound members`);
+    return { squadStreak: 0, squadAverageStreak: 0 };
+  }
+
+  // Get bound members' stats only
   const memberStatsMap = new Map<string, UserDailyStats[]>();
-  for (const memberId of memberIds) {
+  for (const memberId of boundMemberIds) {
     const stats = await getUserStats(memberId);
     memberStatsMap.set(memberId, stats);
   }
 
-  // Calculate streaks
-  const squadStreak = calculateSquadStreak(memberStatsMap, memberIds);
+  // Calculate streaks using only bound members
+  const squadStreak = calculateSquadStreak(memberStatsMap, boundMemberIds);
   const squadAverageStreak = calculateAverageStreak(memberStatsMap);
 
   console.log(`Calculated squad streaks for ${squadId}:`, {
     squadStreak,
     squadAverageStreak,
-    memberCount: memberIds.length,
+    totalMembers: allMemberIds.length,
+    boundMembers: boundMemberIds.length,
   });
 
   // Persist to Firestore

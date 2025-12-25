@@ -88,7 +88,8 @@ service cloud.firestore {
     
     match /auth-bindings/{authUid} {
       // Allow users to read their own binding
-      allow read: if isAuthenticated() && request.auth.uid == authUid;
+      // Allow users to read their own binding or list bindings if they are authenticated
+      allow read: if isAuthenticated() && (request.auth.uid == authUid || hasAuthBinding());
       
       // Allow users to create their own binding (one time only)
       allow create: if isAuthenticated() && 
@@ -160,8 +161,8 @@ service cloud.firestore {
       // ==================== User Daily Stats Subcollection ====================
       
       match /stats/{date} {
-        // Users can read their own stats
-        allow read: if getBoundUserId() == userId;
+        // All authenticated users can read other users' stats (for displaying squad heatmap)
+        allow read: if hasAuthBinding();
         
         // Users can create/update their own stats (automated by createWorkout)
         allow create, update: if getBoundUserId() == userId && 

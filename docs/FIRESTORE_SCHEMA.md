@@ -41,8 +41,12 @@ firestore/
 **1. Check-in（建立 Workout + 更新統計）**
 
 ```typescript
-const workoutId = `${userId}_${date}_${Date.now()}`;
-await setDoc(doc(db, "workouts", workoutId), {
+// 使用 Firestore 自動生成 ID
+const workoutsRef = collection(db, "workouts");
+const workoutDoc = doc(workoutsRef);
+const workoutId = workoutDoc.id;
+
+await setDoc(workoutDoc, {
   id: workoutId,
   userId,
   squadId,
@@ -146,7 +150,7 @@ await runTransaction(db, async (tx) => {
 
 - **日期欄位**: 不需時區用 `string` (YYYY-MM-DD)，需精確時間用 `Timestamp`
 - **冗餘資料**: `squads/.../members` 冗餘 user 資料為效能，需同步更新
-- **WorkoutId 格式**: `{userId}_{date}_{timestamp}` 可排序且唯一
+- **WorkoutId 格式**: Firestore 自動生成的 ID（保證唯一性）
 - **Streak 計算**: 只計算已綁定使用者，全部完成才 +1
 - **備份**: 使用 `firebase firestore:export/import`
 

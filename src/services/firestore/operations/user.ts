@@ -79,18 +79,28 @@ export async function updateUser(
 }
 
 /**
- * Update user streak
+ * Update user streak and total workouts
  */
 export async function updateUserStreak(
   userId: string,
   currentStreak: number,
-  longestStreak: number
+  longestStreak: number,
+  incrementTotalWorkouts: boolean = false
 ): Promise<void> {
-  await updateUser(userId, {
+  const updateData: Partial<UserDocument> = {
     currentStreak,
     longestStreak,
     lastWorkoutDate: new Date().toISOString().split("T")[0],
-  });
+  };
+
+  // Only increment totalWorkouts when explicitly requested (during check-in)
+  if (incrementTotalWorkouts) {
+    // Get current totalWorkouts and increment
+    const user = await getUser(userId);
+    updateData.totalWorkouts = (user?.totalWorkouts || 0) + 1;
+  }
+
+  await updateUser(userId, updateData);
 }
 
 /**

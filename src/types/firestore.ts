@@ -12,7 +12,7 @@ export interface SquadDocument {
 
   // Member information
   memberIds: string[];
-  memberCount?: number; // Number of members in the squad
+  memberCount: number; // Number of members in the squad (required)
   captainId?: string;
 
   // Squad statistics (cached fields)
@@ -29,23 +29,45 @@ export interface SquadDocument {
   isActive?: boolean; // Whether the squad is currently active
 }
 
+/**
+ * Squad member subcollection document
+ * Only stores squad-specific data (role, joinedAt)
+ *
+ * Collection: squads/{squadId}/members/{userId}
+ *
+ * Note: User stats (currentStreak, totalWorkouts) are read from users/{userId}
+ * at runtime and merged into this interface for convenience
+ */
 export interface SquadMemberDocument {
+  // Squad-specific fields (stored in subcollection)
   userId: string;
   squadId: string;
   joinedAt: Timestamp;
   role: "captain" | "member";
 
-  // Member statistics in squad (cached)
+  // Runtime-merged fields from users/{userId}
+  // These are NOT stored in the subcollection, but merged by getSquadMembers()
   currentStreak: number;
   totalWorkouts: number;
   lastWorkoutDate?: string; // YYYY-MM-DD
-
-  // User basic data (redundant, reduce queries)
   name: string;
   initials: string;
   avatarUrl?: string;
 }
 
+/**
+ * Minimal subcollection document structure
+ * Used for Firestore reads/writes - only contains stored fields
+ */
+export interface SquadMemberStoredData {
+  role: "captain" | "member";
+  joinedAt: Timestamp;
+}
+
+/**
+ * @reserved - 預留類型，目前未使用
+ * 用於未來擴充每日團隊統計功能
+ */
 export interface SquadDailyStats {
   date: string; // YYYY-MM-DD
   squadId: string;
@@ -109,7 +131,7 @@ export interface AuthBindingDocument {
 export interface UserDailyStats {
   date: string; // YYYY-MM-DD
   userId: string;
-  count: number; // Daily completion count (0-4)
+  count: number; // Daily completion count (0-10)
   workoutIds: string[];
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -133,6 +155,10 @@ export interface WorkoutDocument {
 
 // ==================== Daily Stats Types ====================
 
+/**
+ * @reserved - 預留類型，目前未使用
+ * 用於未來擴充全域每日統計功能
+ */
 export interface GlobalDailyStats {
   date: string; // YYYY-MM-DD
   totalWorkouts: number;

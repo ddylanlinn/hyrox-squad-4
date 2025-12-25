@@ -22,6 +22,7 @@ export {
   getDashboardData,
   getSquadDashboardData,
   type DashboardData,
+  type TeamDailyStats,
 } from "./aggregators/dashboard";
 
 // ============================================================

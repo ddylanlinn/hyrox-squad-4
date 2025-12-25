@@ -13,7 +13,7 @@ import {
   getTodayString,
 } from "../services/firestore";
 import {
-  convertUserDailyStatsToHistory,
+  convertTeamDailyStatsToHistory,
   convertWorkoutDocumentToRecord,
   convertSquadMembersToUsers,
 } from "../utils/dataConverters";
@@ -32,10 +32,10 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
   // State
   const loading = ref(true);
   const error = ref<string | null>(null);
-  const history = ref<DailyStats[]>([]);
+  const history = ref<DailyStats[]>([]); // Now uses TEAM history (count = 0-4)
   const todaysRecords = ref<WorkoutRecord[]>([]);
   const users = ref<User[]>([]);
-  const streak = ref(0);
+  const streak = ref(0); // Squad streak
 
   // Firestore realtime listener unsubscribe function
   let unsubscribeWorkouts: (() => void) | null = null;
@@ -55,9 +55,15 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
 
       const data = await getDashboardData(appUserId.value, squadId);
 
-      if (data.userStats) {
-        history.value = convertUserDailyStatsToHistory(data.userStats);
-        streak.value = calculateStreak(data.userStats);
+      // Use TEAM history for Heatmap (per TECHNICAL_SPEC.md L549-555)
+      // count = number of members who completed (0-4)
+      if (data.teamHistory) {
+        history.value = convertTeamDailyStatsToHistory(data.teamHistory);
+      }
+
+      // Use squad streak from squad document (already calculated during check-in)
+      if (data.squad) {
+        streak.value = data.squad.currentStreak || 0;
       }
 
       if (data.todayWorkouts) {
@@ -72,10 +78,10 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
 
       console.log("Dashboard data loaded successfully", {
         userId: appUserId.value,
-        history: history.value.length,
+        teamHistory: history.value.length,
         todayWorkouts: todaysRecords.value.length,
         users: users.value.length,
-        streak: streak.value,
+        squadStreak: streak.value,
       });
     } catch (err) {
       console.error("Failed to load dashboard data:", err);

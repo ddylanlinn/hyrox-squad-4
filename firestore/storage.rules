@@ -12,7 +12,7 @@ service firebase.storage {
     
     // Validate image file
     function isValidImage() {
-      return request.resource.size < 10 * 1024 * 1024 &&  // Max 10MB
+      return request.resource.size < 5 * 1024 * 1024 &&  // Max 5MB (matches docs)
              request.resource.contentType.matches('image/.*');  // Must be image
     }
     
@@ -20,9 +20,11 @@ service firebase.storage {
     
     // Path: workouts/{squadId}/{userId}/{filename}
     match /workouts/{squadId}/{userId}/{filename} {
-      // All authenticated users can read workout images
-      // Note: Frontend should control which images to display based on squad membership
-      allow read: if isAuthenticated();
+      // Only squad members can read workout images
+      // Check if user has auth binding and is a member of the squad
+      allow read: if isAuthenticated() &&
+                     firestore.exists(/databases/(default)/documents/auth-bindings/$(request.auth.uid)) &&
+                     firestore.exists(/databases/(default)/documents/squads/$(squadId)/members/$(firestore.get(/databases/(default)/documents/auth-bindings/$(request.auth.uid)).data.appUserId));
       
       // Users can upload images only to their own folder
       // Filename must follow pattern: {userId}_{timestamp}.{ext}

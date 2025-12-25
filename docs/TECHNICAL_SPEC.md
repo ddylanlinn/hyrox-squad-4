@@ -1,4 +1,5 @@
 # Hyrox Squad 4 - 規格文件
+
 ---
 
 ## 目錄
@@ -23,6 +24,7 @@
 **Hyrox Squad 4** 是一個專為 Hyrox 團隊訓練設計的打卡記錄 App，支援 4 人小隊進行訓練追蹤、進度可視化和團隊激勵。
 
 ### 核心功能
+
 - ✅ **Check-in 打卡**：上傳訓練照片和內容描述
 - ✅ **進度儀表板**：即時顯示團隊完成進度（0-100%）
 - ✅ **Heatmap 熱力圖**：80 天訓練歷史可視化
@@ -31,6 +33,7 @@
 - ✅ **照片預覽**：點擊頭像查看完整訓練照片
 
 ### 技術特色
+
 - 使用 Firebase 作為完整後端解決方案（Auth + Firestore + Storage）
 - 支援 Google 登入和信箱密碼登入
 - 嚴格的 Firestore 安全規則保護資料
@@ -49,7 +52,7 @@ flowchart TB
         Login[登入畫面]
         UserBind[使用者綁定選擇]
         MainApp[主應用]
-        
+
         subgraph MainComponents[主要組件]
             Heatmap[HistoryHeatmap<br/>上半部]
             Dashboard[EnergyDashboard<br/>中半部]
@@ -57,13 +60,13 @@ flowchart TB
             Modal[PhotoModal<br/>照片預覽]
         end
     end
-    
+
     subgraph Backend[Firebase Backend]
         Auth[Firebase Auth<br/>Google + Email]
         Firestore[Firestore Database]
         Storage[Firebase Storage<br/>照片儲存]
     end
-    
+
     Login -->|驗證| Auth
     Auth -->|已驗證但未綁定| UserBind
     UserBind -->|綁定使用者| Firestore
@@ -90,110 +93,116 @@ flowchart TB
 ### Firestore Collections 結構
 
 #### 1. `squads/{squadId}`
+
 **用途**：團隊資訊文件
 
-| 欄位 | 類型 | 必填 | 說明 |
-|------|------|------|------|
-| `id` | string | ✅ | 團隊 ID (例: squad-001) |
-| `name` | string | ✅ | 團隊名稱 |
-| `description` | string | ❌ | 團隊描述 |
-| `competitionDate` | string | ✅ | 比賽日期 (YYYY-MM-DD) |
-| `memberIds` | string[] | ✅ | 成員 ID 列表 ['u1', 'u2', 'u3', 'u4'] |
-| `memberCount` | number | ✅ | 成員數量 |
-| `captainId` | string | ❌ | 隊長 ID |
-| `currentStreak` | number | ✅ | 當前連續天數 |
-| `averageStreak` | number | ✅ | 平均連續天數 |
-| `totalWorkouts` | number | ✅ | 總訓練次數 |
-| `lastActivityDate` | string | ❌ | 最後活動日期 (YYYY-MM-DD) |
-| `targetDailyWorkouts` | number | ❌ | 每日目標訓練次數 |
-| `createdAt` | Timestamp | ✅ | 建立時間 |
-| `updatedAt` | Timestamp | ✅ | 更新時間 |
+| 欄位                  | 類型      | 必填 | 說明                                  |
+| --------------------- | --------- | ---- | ------------------------------------- |
+| `id`                  | string    | ✅   | 團隊 ID (例: squad-001)               |
+| `name`                | string    | ✅   | 團隊名稱                              |
+| `description`         | string    | ❌   | 團隊描述                              |
+| `competitionDate`     | string    | ✅   | 比賽日期 (YYYY-MM-DD)                 |
+| `memberIds`           | string[]  | ✅   | 成員 ID 列表 ['u1', 'u2', 'u3', 'u4'] |
+| `memberCount`         | number    | ✅   | 成員數量                              |
+| `captainId`           | string    | ❌   | 隊長 ID                               |
+| `currentStreak`       | number    | ✅   | 當前連續天數                          |
+| `averageStreak`       | number    | ✅   | 平均連續天數                          |
+| `totalWorkouts`       | number    | ✅   | 總訓練次數                            |
+| `lastActivityDate`    | string    | ❌   | 最後活動日期 (YYYY-MM-DD)             |
+| `targetDailyWorkouts` | number    | ❌   | 每日目標訓練次數                      |
+| `createdAt`           | Timestamp | ✅   | 建立時間                              |
+| `updatedAt`           | Timestamp | ✅   | 更新時間                              |
 
 ---
 
 #### 2. `squads/{squadId}/members/{userId}`
+
 **用途**：團隊成員資訊（子集合）
 
-| 欄位 | 類型 | 必填 | 說明 |
-|------|------|------|------|
-| `userId` | string | ✅ | 使用者 ID (u1, u2, u3, u4) |
-| `squadId` | string | ✅ | 團隊 ID |
-| `name` | string | ✅ | 使用者名稱 |
-| `initials` | string | ✅ | 姓名縮寫 |
-| `avatarUrl` | string | ❌ | 頭像 URL |
-| `role` | string | ✅ | 角色 (captain / member) |
-| `currentStreak` | number | ✅ | 個人當前連續天數 |
-| `totalWorkouts` | number | ✅ | 個人總訓練次數 |
-| `lastWorkoutDate` | string | ❌ | 最後訓練日期 (YYYY-MM-DD) |
-| `joinedAt` | Timestamp | ✅ | 加入時間 |
+| 欄位              | 類型      | 必填 | 說明                       |
+| ----------------- | --------- | ---- | -------------------------- |
+| `userId`          | string    | ✅   | 使用者 ID (u1, u2, u3, u4) |
+| `squadId`         | string    | ✅   | 團隊 ID                    |
+| `name`            | string    | ✅   | 使用者名稱                 |
+| `initials`        | string    | ✅   | 姓名縮寫                   |
+| `avatarUrl`       | string    | ❌   | 頭像 URL                   |
+| `role`            | string    | ✅   | 角色 (captain / member)    |
+| `currentStreak`   | number    | ✅   | 個人當前連續天數           |
+| `totalWorkouts`   | number    | ✅   | 個人總訓練次數             |
+| `lastWorkoutDate` | string    | ❌   | 最後訓練日期 (YYYY-MM-DD)  |
+| `joinedAt`        | Timestamp | ✅   | 加入時間                   |
 
 ---
 
 #### 3. `users/{userId}`
+
 **用途**：使用者資料
 
-| 欄位 | 類型 | 必填 | 說明 |
-|------|------|------|------|
-| `id` | string | ✅ | 使用者 ID (u1, u2, u3, u4) |
-| `name` | string | ✅ | 姓名 (Dylan, Crystal, Sylvi, Andrew) |
-| `initials` | string | ✅ | 縮寫 (DL, CH, SB, AC) |
-| `email` | string | ❌ | 電子郵件 |
-| `avatarUrl` | string | ❌ | 頭像 URL |
-| `currentSquadId` | string | ❌ | 當前團隊 ID |
-| `squadIds` | string[] | ❌ | 參與的團隊 ID 列表 |
-| `currentStreak` | number | ❌ | 當前連續天數 |
-| `longestStreak` | number | ❌ | 最長連續天數 |
-| `totalWorkouts` | number | ❌ | 總訓練次數 |
-| `lastWorkoutDate` | string | ❌ | 最後訓練日期 (YYYY-MM-DD) |
-| `createdAt` | Timestamp | ✅ | 建立時間 |
-| `updatedAt` | Timestamp | ✅ | 更新時間 |
-| `lastLoginAt` | Timestamp | ❌ | 最後登入時間 |
+| 欄位              | 類型      | 必填 | 說明                                 |
+| ----------------- | --------- | ---- | ------------------------------------ |
+| `id`              | string    | ✅   | 使用者 ID (u1, u2, u3, u4)           |
+| `name`            | string    | ✅   | 姓名 (Dylan, Crystal, Sylvi, Andrew) |
+| `initials`        | string    | ✅   | 縮寫 (DL, CH, SB, AC)                |
+| `email`           | string    | ❌   | 電子郵件                             |
+| `avatarUrl`       | string    | ❌   | 頭像 URL                             |
+| `currentSquadId`  | string    | ❌   | 當前團隊 ID                          |
+| `squadIds`        | string[]  | ❌   | 參與的團隊 ID 列表                   |
+| `currentStreak`   | number    | ❌   | 當前連續天數                         |
+| `longestStreak`   | number    | ❌   | 最長連續天數                         |
+| `totalWorkouts`   | number    | ❌   | 總訓練次數                           |
+| `lastWorkoutDate` | string    | ❌   | 最後訓練日期 (YYYY-MM-DD)            |
+| `createdAt`       | Timestamp | ✅   | 建立時間                             |
+| `updatedAt`       | Timestamp | ✅   | 更新時間                             |
+| `lastLoginAt`     | Timestamp | ❌   | 最後登入時間                         |
 
 ---
 
 #### 4. `users/{userId}/stats/{date}`
+
 **用途**：使用者每日統計（子集合）
 
-| 欄位 | 類型 | 必填 | 說明 |
-|------|------|------|------|
-| `date` | string | ✅ | 日期 (YYYY-MM-DD) |
-| `userId` | string | ✅ | 使用者 ID |
-| `count` | number | ✅ | 當日完成次數 (0-10) |
-| `workoutIds` | string[] | ✅ | 訓練記錄 ID 列表 |
-| `createdAt` | Timestamp | ✅ | 建立時間 |
-| `updatedAt` | Timestamp | ✅ | 更新時間 |
+| 欄位         | 類型      | 必填 | 說明                |
+| ------------ | --------- | ---- | ------------------- |
+| `date`       | string    | ✅   | 日期 (YYYY-MM-DD)   |
+| `userId`     | string    | ✅   | 使用者 ID           |
+| `count`      | number    | ✅   | 當日完成次數 (0-10) |
+| `workoutIds` | string[]  | ✅   | 訓練記錄 ID 列表    |
+| `createdAt`  | Timestamp | ✅   | 建立時間            |
+| `updatedAt`  | Timestamp | ✅   | 更新時間            |
 
 ---
 
 #### 5. `auth-bindings/{firebaseAuthUid}`
+
 **用途**：驗證綁定文件
 
-| 欄位 | 類型 | 必填 | 說明 |
-|------|------|------|------|
-| `firebaseAuthUid` | string | ✅ | Firebase Auth UID (文件 ID) |
-| `appUserId` | string | ✅ | 綁定的應用使用者 ID (u1-u4) |
-| `provider` | string | ✅ | 登入方式 (google.com / password) |
-| `email` | string | ❌ | 登入信箱 |
-| `displayName` | string | ❌ | 顯示名稱 |
-| `createdAt` | Timestamp | ✅ | 建立時間 |
-| `updatedAt` | Timestamp | ✅ | 更新時間 |
+| 欄位              | 類型      | 必填 | 說明                             |
+| ----------------- | --------- | ---- | -------------------------------- |
+| `firebaseAuthUid` | string    | ✅   | Firebase Auth UID (文件 ID)      |
+| `appUserId`       | string    | ✅   | 綁定的應用使用者 ID (u1-u4)      |
+| `provider`        | string    | ✅   | 登入方式 (google.com / password) |
+| `email`           | string    | ❌   | 登入信箱                         |
+| `displayName`     | string    | ❌   | 顯示名稱                         |
+| `createdAt`       | Timestamp | ✅   | 建立時間                         |
+| `updatedAt`       | Timestamp | ✅   | 更新時間                         |
 
 ---
 
 #### 6. `workouts/{workoutId}`
+
 **用途**：訓練記錄
 
-| 欄位 | 類型 | 必填 | 說明 |
-|------|------|------|------|
-| `id` | string | ✅ | 訓練記錄 ID |
-| `userId` | string | ✅ | 使用者 ID |
-| `squadId` | string | ✅ | 團隊 ID |
-| `date` | string | ✅ | 訓練日期 (YYYY-MM-DD) |
-| `completedAt` | Timestamp | ✅ | 完成時間 |
-| `imageUrl` | string | ✅ | 照片 URL |
-| `note` | string | ❌ | 訓練內容描述 |
-| `createdAt` | Timestamp | ✅ | 建立時間 |
-| `missionId` | string | ❌ | 任務 ID (預留擴充) |
+| 欄位          | 類型      | 必填 | 說明                  |
+| ------------- | --------- | ---- | --------------------- |
+| `id`          | string    | ✅   | 訓練記錄 ID           |
+| `userId`      | string    | ✅   | 使用者 ID             |
+| `squadId`     | string    | ✅   | 團隊 ID               |
+| `date`        | string    | ✅   | 訓練日期 (YYYY-MM-DD) |
+| `completedAt` | Timestamp | ✅   | 完成時間              |
+| `imageUrl`    | string    | ✅   | 照片 URL              |
+| `note`        | string    | ❌   | 訓練內容描述          |
+| `createdAt`   | Timestamp | ✅   | 建立時間              |
+| `missionId`   | string    | ❌   | 任務 ID (預留擴充)    |
 
 ---
 
@@ -214,7 +223,7 @@ sequenceDiagram
 
     User->>LoginView: 開啟 App
     LoginView->>FirebaseAuth: 檢查登入狀態
-    
+
     alt 未登入
         User->>LoginView: 選擇登入方式
         alt Google 登入
@@ -225,9 +234,9 @@ sequenceDiagram
         end
         FirebaseAuth-->>LoginView: 登入成功 (authUid)
     end
-    
+
     LoginView->>Firestore: 查詢 auth-bindings/{authUid}
-    
+
     alt 尚未綁定
         Firestore-->>UserSelection: 無綁定記錄
         UserSelection->>User: 顯示 4 位使用者選項
@@ -236,7 +245,7 @@ sequenceDiagram
         Note over Firestore: appUserId: u2<br/>provider: google.com<br/>email: user@gmail.com
         Firestore-->>UserSelection: 綁定成功
     end
-    
+
     UserSelection->>MainApp: 導航至主應用
     MainApp->>Firestore: 載入資料
 ```
@@ -244,11 +253,13 @@ sequenceDiagram
 #### 登入方式規格
 
 **1. Google Sign In**
+
 - 使用 Firebase Auth Google Provider
 - 自動取得使用者信箱和顯示名稱
 - 無需額外設定密碼
 
 **2. Email + Password**
+
 - 固定密碼
 - 任何信箱都可使用此密碼登入
 - 首次登入會自動建立 Firebase Auth 帳號
@@ -256,12 +267,14 @@ sequenceDiagram
 #### 使用者綁定規格
 
 **固定使用者列表：**
+
 - `u1`: Dylan (DL)
 - `u2`: Crystal (CH)
 - `u3`: Sylvi (SB)
 - `u4`: Andrew (AC)
 
 **綁定規則：**
+
 - 每個 Firebase Auth UID 只能綁定一次
 - 綁定後無法修改（需透過刪除 auth-binding 文件重建）
 - 多個 Firebase Auth UID 可以綁定到同一個應用使用者
@@ -284,25 +297,25 @@ sequenceDiagram
     User->>ActionSection: 輸入訓練內容 (可選)
     User->>ActionSection: 點擊 CHECK-IN 按鈕
     ActionSection->>Browser: confirm("Ready to check in?<br/>Workout: {note}")
-    
+
     alt 使用者確認
         Browser-->>ActionSection: 確認
         ActionSection->>Browser: 開啟檔案選擇器<br/>(accept="image/*")
         Browser->>User: 顯示相機/相簿選項
         User->>Browser: 拍照或選擇照片
         Browser-->>ActionSection: 回傳照片檔案
-        
+
         ActionSection->>Storage: 上傳照片<br/>(workouts/{squadId}/{userId}/{timestamp}.jpg)
         Storage-->>ActionSection: 回傳照片 URL
-        
+
         ActionSection->>Firestore: 建立 workout 文件
         Note over Firestore: userId, squadId, date<br/>imageUrl, note<br/>completedAt
-        
+
         Firestore->>Firestore: 更新 users/{userId}/stats/{date}
         Firestore->>Firestore: 更新 users/{userId} 統計
         Firestore->>Firestore: 更新 squads/{squadId} 統計
         Firestore->>Firestore: 計算並更新 streak
-        
+
         Firestore-->>ActionSection: Check-in 完成
         ActionSection->>ActionSection: 清空輸入框
     else 使用者取消
@@ -314,6 +327,7 @@ sequenceDiagram
 #### UI 規格
 
 **1. 未完成狀態**
+
 - 顯示訓練內容輸入框
   - Placeholder: `"e.g., 5k Run + 100 Wall Balls"`
 - 顯示 CHECK-IN 按鈕
@@ -322,11 +336,13 @@ sequenceDiagram
   - 顏色：主題色（lime/green）
 
 **2. 上傳中狀態**
+
 - 按鈕文字變為 `"Uploading..."`
 - 顯示旋轉載入動畫（Loader2 icon）
 - 按鈕禁用（disabled）
 
 **3. 已完成狀態**
+
 - 隱藏輸入框和 CHECK-IN 按鈕
 - 顯示 NUDGE SQUAD 按鈕
   - 圖示：複製圖示（Copy icon）
@@ -355,7 +371,7 @@ flowchart LR
         Ring[進度圓環]
         Avatars[使用者頭像列]
     end
-    
+
     Ring -->|percent = completedCount / 4 * 100| Progress[顯示進度百分比]
     Avatars -->|未完成| Initials[顯示姓名縮寫<br/>灰色邊框]
     Avatars -->|已完成| Photo[顯示照片縮圖<br/>綠色邊框 + ✓ 標記]
@@ -365,6 +381,7 @@ flowchart LR
 #### 進度圓環規格
 
 **1. 視覺設計**
+
 - 圓環半徑：90px
 - 圓環寬度：12px
 - 背景色：淺灰色 (`--color-energy-ring-bg`)
@@ -372,6 +389,7 @@ flowchart LR
 - 完成時：綠色光暈效果（filter: drop-shadow）
 
 **2. 計算邏輯**
+
 - 進度百分比 = (已完成人數 / 團隊總人數) × 100
 - 團隊總人數固定為 4
 - 範例：
@@ -382,12 +400,14 @@ flowchart LR
   - 4 人完成 → 100% (顯示光暈)
 
 **3. 動畫效果**
+
 - 進度變化時平滑過渡（transition: 0.3s）
 - 頁面載入時從 0% 動畫至實際進度（延遲 100ms 觸發）
 
 #### 使用者頭像規格
 
 **1. 未完成狀態**
+
 - 顯示姓名縮寫（2 個英文字母）
 - 背景色：淺灰色 (`--color-neutral-50`)
 - 邊框：灰色 2px (`--color-border`)
@@ -395,6 +415,7 @@ flowchart LR
 - 透明度：0.6
 
 **2. 已完成狀態**
+
 - 顯示上傳的照片縮圖
 - 邊框：綠色 2px (`--color-primary-500`)
 - 右下角顯示綠色 ✓ 勾勾標記（Check icon）
@@ -403,6 +424,7 @@ flowchart LR
 - 陰影效果：`0 4px 12px rgba(132, 204, 22, 0.3)`
 
 **3. 布局**
+
 - 4 個頭像水平排列
 - 每個頭像尺寸：56px × 56px
 - 圓形外觀（border-radius: 50%）
@@ -423,7 +445,7 @@ stateDiagram-v2
     [*] --> Closed
     Closed --> Open: 點擊頭像
     Open --> Closed: 點擊關閉/背景
-    
+
     state Open {
         [*] --> ShowPhoto
         ShowPhoto --> ShowNote
@@ -434,6 +456,7 @@ stateDiagram-v2
 #### UI 規格
 
 **1. 全螢幕遮罩**
+
 - 背景：半透明黑色 `rgba(0,0,0,0.8)`
 - 點擊背景關閉 Modal
 - z-index: 50
@@ -441,6 +464,7 @@ stateDiagram-v2
 - 覆蓋整個視窗（top/left/right/bottom: 0）
 
 **2. 內容區**
+
 - 照片顯示
   - 最大寬度：90%
   - 最大高度：70vh
@@ -451,7 +475,8 @@ stateDiagram-v2
   - 完成時間（格式：YYYY/MM/DD HH:mm）
 
 **3. 關閉按鈕**
-- 位置：右上角（absolute定位）
+
+- 位置：右上角（absolute 定位）
 - 圖示：X 圖示（X icon from Lucide）
 - 顏色：白色
 - 尺寸：32px × 32px
@@ -471,7 +496,7 @@ flowchart TB
         Streak[當前 Streak]
         Grid[Heatmap 格線]
     end
-    
+
     Countdown -->|計算天數| RaceDay[比賽日期 - 今天]
     Streak -->|計算連續天數| StreakLogic[所有已綁定使用者<br/>都完成打卡則 +1]
     Grid -->|80 天| DisplayDays[從比賽前 79 天<br/>到比賽當天]
@@ -481,11 +506,13 @@ flowchart TB
 #### 比賽倒數計時規格
 
 **1. 計算邏輯**
+
 - 比賽日期固定：`2026-02-28`（寫在 `constants/index.ts`）
 - 計算公式：`Math.ceil((比賽日期 - 今天) / 86400000)`
 - 顯示格式：`"{天數} Days"`
 
 **2. 視覺設計**
+
 - 標題：`"RACE COUNTDOWN"`
   - 大寫、粗體、灰色
   - Font-size: 0.75rem (12px)
@@ -526,6 +553,7 @@ flowchart TB
 ```
 
 **2. 視覺設計**
+
 - 標題：`"CURRENT STREAK"`
   - 大寫、粗體、灰色
   - Font-size: 0.75rem (12px)
@@ -539,6 +567,7 @@ flowchart TB
 #### Heatmap 格線規格
 
 **1. 顯示範圍**
+
 - 固定顯示 80 天（`HEATMAP_DAYS_COUNT = 80`）
 - 時間範圍：比賽日期前 79 天 → 比賽當天
 - 格線排列：16 列 × 5 行（總共 80 格）
@@ -546,15 +575,16 @@ flowchart TB
 
 **2. 顏色對應**
 
-| 完成人數 | 顏色 | CSS 變數 |
-|---------|------|---------|
-| 0 | 淺灰色（空心） | `--color-heatmap-empty` |
-| 1 | 淺綠色 | `--color-heatmap-level-1` |
-| 2 | 中綠色 | `--color-heatmap-level-2` |
-| 3 | 深綠色 | `--color-heatmap-level-3` |
-| 4 | 最深綠色 | `--color-heatmap-level-4` |
+| 完成人數 | 顏色           | CSS 變數                  |
+| -------- | -------------- | ------------------------- |
+| 0        | 淺灰色（空心） | `--color-heatmap-empty`   |
+| 1        | 淺綠色         | `--color-heatmap-level-1` |
+| 2        | 中綠色         | `--color-heatmap-level-2` |
+| 3        | 深綠色         | `--color-heatmap-level-3` |
+| 4        | 最深綠色       | `--color-heatmap-level-4` |
 
 **3. 特殊標記**
+
 - **今天**：外圍顯示高亮邊框
   - Box-shadow: `0 0 0 1px white, 0 0 0 3px var(--color-heatmap-today-ring)`
 - **比賽當天**：中央顯示閃電圖示 ⚡
@@ -563,6 +593,7 @@ flowchart TB
   - 顏色：`--color-heatmap-race-icon`
 
 **4. 互動效果**
+
 - hover 時：
   - 放大：`transform: scale(1.1)`
   - 陰影：`box-shadow: hover:shadow-md`
@@ -573,17 +604,17 @@ flowchart TB
 
 ## 技術堆疊
 
-| 類別 | 技術 | 版本 | 說明 |
-|------|------|------|------|
-| 前端框架 | Vue | 3.x | Composition API |
-| 開發語言 | TypeScript | 5.x | 類型安全 |
-| 建置工具 | Vite | 6.x | 快速開發建置 |
-| 樣式框架 | Tailwind CSS | v4 | Utility-first CSS |
-| 圖示庫 | Lucide Vue Next | latest | SVG 圖示庫 |
-| 後端服務 | Firebase Auth | 10.x | 身份驗證 |
-| 資料庫 | Firestore | 10.x | NoSQL 雲端資料庫 |
-| 檔案儲存 | Firebase Storage | 10.x | 照片儲存 |
-| 部署平台 | Firebase Hosting | - | 靜態網站託管 |
+| 類別     | 技術             | 版本   | 說明              |
+| -------- | ---------------- | ------ | ----------------- |
+| 前端框架 | Vue              | 3.x    | Composition API   |
+| 開發語言 | TypeScript       | 5.x    | 類型安全          |
+| 建置工具 | Vite             | 6.x    | 快速開發建置      |
+| 樣式框架 | Tailwind CSS     | v4     | Utility-first CSS |
+| 圖示庫   | Lucide Vue Next  | latest | SVG 圖示庫        |
+| 後端服務 | Firebase Auth    | 10.x   | 身份驗證          |
+| 資料庫   | Firestore        | 10.x   | NoSQL 雲端資料庫  |
+| 檔案儲存 | Firebase Storage | 10.x   | 照片儲存          |
+| 部署平台 | Firebase Hosting | -      | 靜態網站託管      |
 
 ### 專案結構
 
@@ -657,6 +688,7 @@ flowchart TB
 ### Firestore Rules 摘要
 
 #### 1. `auth-bindings` Collection
+
 - ✅ 使用者可讀取自己的綁定（`request.auth.uid == authUid`）
 - ✅ 使用者可建立自己的綁定（僅一次）
   - 必須驗證 `firebaseAuthUid == request.auth.uid`
@@ -666,6 +698,7 @@ flowchart TB
 - ❌ 不可刪除
 
 #### 2. `squads` Collection
+
 - ✅ 所有已綁定使用者可讀取
 - ✅ 團隊成員可更新統計欄位
   - `totalWorkouts`, `lastActivityDate`, `currentStreak`, `averageStreak`, `updatedAt`
@@ -674,23 +707,27 @@ flowchart TB
 - ❌ 不可建立/刪除（需透過 Admin SDK）
 
 #### 3. `squads/{squadId}/members` Subcollection
+
 - ✅ 團隊成員可讀取所有成員資訊
 - ✅ 隊長可建立/刪除成員
 - ✅ 成員自己或隊長可更新統計
 
 #### 4. `users` Collection
+
 - ✅ 所有已綁定使用者可讀取其他使用者（用於顯示團隊成員）
 - ✅ 使用者可更新自己的非保護欄位
   - 不可修改：`id`, `createdAt`
 - ❌ 不可建立/刪除（需透過 Admin SDK）
 
 #### 5. `users/{userId}/stats` Subcollection
+
 - ✅ 使用者可讀寫自己的統計
 - ✅ 必須驗證 `date` 格式為 `YYYY-MM-DD`
 - ✅ 必須驗證 `count` 範圍：0-10
 - ❌ 不可刪除
 
 #### 6. `workouts` Collection
+
 - ✅ 團隊成員可讀取團隊內的訓練記錄
 - ✅ 使用者可建立自己的訓練記錄
   - 必須是團隊成員
@@ -712,7 +749,6 @@ flowchart TB
 - ✅ 檔案格式限制：
   - `image/jpeg`
   - `image/png`
-  - `image/gif`
   - `image/webp`
 
 ---
@@ -735,21 +771,26 @@ flowchart TB
 ### Firestore Schema 完整定義
 
 詳細的資料結構定義、CRUD 操作範例、索引設定和資料遷移指引請參考：
+
 - **[Firestore Schema 詳細規格](./FIRESTORE_SCHEMA.md)**
 
 包含內容：
+
 1. **Collection Schema**
+
    - 每個欄位的詳細說明（類型、必填/選填、預設值、驗證規則）
    - 欄位格式驗證（正則表達式、範圍限制）
    - 索引配置建議
 
 2. **CRUD 操作範例**
+
    - 建立文件的標準流程
    - 更新文件的安全做法
    - 查詢資料的最佳實踐
    - 批次操作和交易處理
 
 3. **資料遷移指引**
+
    - Schema 版本管理
    - 欄位新增/刪除流程
    - 資料格式轉換範例
@@ -763,9 +804,11 @@ flowchart TB
 ### Firestore 變更檢查清單
 
 每次修改 Firestore 結構或邏輯時，必須完成檢查清單，詳見：
+
 - **[Firestore 變更檢查清單](./FIRESTORE_CHANGE_CHECKLIST.md)**
 
 檢查項目包含：
+
 - ✅ 變更前檢查（必要性、冗餘欄位、影響評估）
 - ✅ Schema 設計檢查（欄位定義、類型、命名規範）
 - ✅ 驗證規則檢查（Rules 更新、權限控制）
@@ -786,6 +829,7 @@ docs/
 ```
 
 每次重大變更後，必須更新對應文件並記錄：
+
 - 變更日期
 - 變更原因
 - 影響範圍
@@ -794,6 +838,7 @@ docs/
 ---
 
 ### 資料一致性
+
 - [ ] Check-in 後 `users/{userId}/stats/{date}` 正確更新
 - [ ] Check-in 後 `users/{userId}` 統計正確更新
 - [ ] Check-in 後 `squads/{squadId}` 統計正確更新
@@ -801,6 +846,7 @@ docs/
 - [ ] 所有時間欄位使用正確時區（本地時區）
 
 ### 安全性
+
 - [ ] 未登入使用者無法存取 Firestore
 - [ ] 未綁定使用者無法存取 Firestore
 - [ ] 使用者只能建立自己的 workout
@@ -810,5 +856,5 @@ docs/
 ---
 
 **變更歷史**：
-- 2025-12-23：初始版本，包含完整系統規格和 Firestore 嚴格規範
 
+- 2025-12-23：初始版本，包含完整系統規格和 Firestore 嚴格規範

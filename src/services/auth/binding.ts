@@ -3,7 +3,16 @@
  * Handles binding between Firebase Auth UID and app user ID
  */
 
-import { doc, getDoc, setDoc, Timestamp } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  Timestamp,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { APP_USERS } from "../../constants";
 import type { AuthBindingDocument } from "../../types/firestore";
@@ -92,4 +101,30 @@ export function getAvailableAppUsers(): ReadonlyArray<{
   readonly initials: string;
 }> {
   return APP_USERS;
+}
+
+/**
+ * Get list of bound member IDs from a list of member IDs
+ * This is used for streak calculation - only bound members should be counted
+ *
+ * @param memberIds - List of all member IDs in the squad
+ * @returns List of member IDs that have auth bindings
+ */
+export async function getBoundMemberIds(
+  memberIds: string[]
+): Promise<string[]> {
+  // Query auth-bindings where appUserId is in memberIds
+  const bindingsRef = collection(db, "auth-bindings");
+  const bindingsQuery = query(bindingsRef, where("appUserId", "in", memberIds));
+
+  const bindingsSnap = await getDocs(bindingsQuery);
+
+  // Extract unique bound member IDs
+  const boundMemberIds = new Set<string>();
+  bindingsSnap.forEach((doc) => {
+    const binding = doc.data() as AuthBindingDocument;
+    boundMemberIds.add(binding.appUserId);
+  });
+
+  return Array.from(boundMemberIds);
 }
