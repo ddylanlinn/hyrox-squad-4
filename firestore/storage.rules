@@ -12,7 +12,7 @@ service firebase.storage {
     
     // Validate image file
     function isValidImage() {
-      return request.resource.size < 5 * 1024 * 1024 &&  // Max 5MB (matches docs)
+      return request.resource.size < 10 * 1024 * 1024 &&  // Max 10MB (updated)
              request.resource.contentType.matches('image/.*');  // Must be image
     }
     

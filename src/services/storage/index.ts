@@ -163,7 +163,7 @@ export function validateFileType(
  * @param maxSizeMB - Max size (MB), default 5MB
  * @returns Whether file meets size limit
  */
-export function validateFileSize(file: File, maxSizeMB: number = 5): boolean {
+export function validateFileSize(file: File, maxSizeMB: number = 10): boolean {
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
   return file.size <= maxSizeBytes;
 }
@@ -189,7 +189,7 @@ export function validateFile(file: File): {
   if (!validateFileSize(file)) {
     return {
       valid: false,
-      error: "File size exceeds 5MB limit",
+      error: "File size exceeds 10MB limit",
     };
   }
 

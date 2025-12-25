@@ -356,7 +356,7 @@ sequenceDiagram
 - **路徑格式**：`workouts/{squadId}/{userId}/{timestamp}.jpg`
 - **接受格式**：`image/*`（所有圖片格式）
 - **檔案來源**：原生相機或相簿（由瀏覽器的 file input 處理）
-- **檔案大小限制**：5MB（Storage Rules 限制）
+- **檔案大小限制**：10MB（Storage Rules 限制）
 
 ---
 
@@ -745,7 +745,7 @@ flowchart TB
   - 必須有 auth-binding
   - 必須 `userId == getBoundUserId()`
 - ✅ 團隊成員可讀取團隊內的照片
-- ✅ 檔案大小限制：5MB
+- ✅ 檔案大小限制：10MB
 - ✅ 檔案格式限制：
   - `image/jpeg`
   - `image/png`
