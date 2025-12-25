@@ -47,7 +47,6 @@
         </h2>
         <div
           class="flex items-baseline gap-1.5 px-3 py-1 rounded-full transition-all duration-500"
-          :class="streak > 0 ? 'streak-bg-active' : ''"
         >
           <Flame
             :size="24"

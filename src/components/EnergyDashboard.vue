@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col items-center justify-center flex-1 relative">
+  <div class="flex flex-col items-center justify-center flex-1 relative pb-10">
     <!-- Power Ring -->
     <div class="relative w-64 h-56 flex items-center justify-center mb-8">
       <!-- Background Circle -->

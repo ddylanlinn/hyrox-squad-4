@@ -2,18 +2,6 @@
   <div
     class="w-full px-5 pb-8 pt-4 bg-gradient-to-t from-white via-white to-transparent"
   >
-    <!-- Note Input Card -->
-    <div v-if="!isCompleted" class="note-card rounded-2xl p-5 mb-6">
-      <label class="block text-xs font-bold text-tertiary uppercase mb-3">
-        Today's Workout
-      </label>
-      <input
-        v-model="noteContent"
-        type="text"
-        class="note-input"
-        :placeholder="WORKOUT_PLACEHOLDER"
-      />
-    </div>
     <!-- Main Action Section -->
     <div v-if="!isCompleted" class="sticky bottom-6">
       <input
@@ -58,12 +46,44 @@
         Great work! Now motivate the others.
       </p>
     </div>
+
+    <!-- Check-in Modal -->
+    <Teleport to="body">
+      <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+        <div class="modal-container">
+          <button class="modal-close" @click="closeModal">
+            <X :size="24" />
+          </button>
+
+          <h2 class="modal-title">Ready to check in?</h2>
+
+          <!-- Note Input Card (Moved from main UI) -->
+          <div class="note-card rounded-2xl p-5 mb-8">
+            <label class="block text-xs font-bold text-tertiary uppercase mb-3">
+              Today's Workout
+            </label>
+            <input
+              v-model="noteContent"
+              type="text"
+              class="note-input"
+              :placeholder="WORKOUT_PLACEHOLDER"
+              @keyup.enter="handleConfirm"
+            />
+          </div>
+
+          <button @click="handleConfirm" class="checkin-button">
+            <Camera :size="24" />
+            SELECT PHOTO & GO
+          </button>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { Camera, Copy, Loader2, Check } from "lucide-vue-next";
+import { Camera, Copy, Loader2, Check, X } from "lucide-vue-next";
 import {
   NUDGE_MESSAGES,
   DEFAULT_WORKOUT_NOTE,
@@ -88,15 +108,18 @@ const fileInputRef = ref<HTMLInputElement | null>(null);
 
 const copied = ref(false);
 const noteContent = ref("");
+const showModal = ref(false);
 
 const handleCheckInClick = () => {
-  const confirmMessage = noteContent.value
-    ? `Ready to check in?\n\nWorkout: ${noteContent.value}`
-    : `Ready to check in?\n\n(Tip: Add your workout details above)`;
+  showModal.value = true;
+};
 
-  if (confirm(confirmMessage)) {
-    fileInputRef.value?.click();
-  }
+const closeModal = () => {
+  showModal.value = false;
+};
+
+const handleConfirm = () => {
+  fileInputRef.value?.click();
 };
 
 const handleFileChange = (e: Event) => {
@@ -106,9 +129,10 @@ const handleFileChange = (e: Event) => {
       file: target.files[0],
       note: noteContent.value || DEFAULT_WORKOUT_NOTE,
     });
-    // Clear note after emitting check-in
+    // Clear state
     noteContent.value = "";
-    // Clear file input to allow re-selecting same file
+    showModal.value = false;
+    // Clear file input
     target.value = "";
   }
 };
@@ -227,6 +251,68 @@ const handleNudge = () => {
   color: var(--color-text-primary);
   border-color: var(--color-border);
   box-shadow: var(--shadow-lg);
+}
+
+/* ========== Modals ========== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 1.25rem;
+  backdrop-filter: blur(4px);
+}
+
+.modal-container {
+  background-color: white;
+  width: 100%;
+  max-width: 24rem;
+  border-radius: 1.5rem;
+  padding: 2rem 1.5rem;
+  position: relative;
+  box-shadow: var(--shadow-2xl);
+  animation: modal-in 0.3s ease-out;
+}
+
+@keyframes modal-in {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  color: var(--color-text-tertiary);
+  background: transparent;
+  border-radius: 50%;
+  padding: 0.25rem;
+  transition: background-color 0.2s;
+}
+
+.modal-close:hover {
+  background-color: var(--color-neutral-100);
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--color-text-primary);
+  margin-bottom: 1.5rem;
+  text-align: center;
+  letter-spacing: -0.025em;
 }
 
 /* ========== Text Colors ========== */

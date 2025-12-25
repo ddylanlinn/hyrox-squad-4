@@ -290,52 +290,55 @@ sequenceDiagram
 sequenceDiagram
     participant User
     participant ActionSection
+    participant CheckInModal
     participant Browser
     participant Storage
     participant Firestore
 
-    User->>ActionSection: 輸入訓練內容 (可選)
     User->>ActionSection: 點擊 CHECK-IN 按鈕
-    ActionSection->>Browser: confirm("Ready to check in?<br/>Workout: {note}")
+    ActionSection->>CheckInModal: 開啟 Check-in Modal
+    User->>CheckInModal: 輸入訓練內容 (可選)
+    User->>CheckInModal: 點擊 SELECT PHOTO & GO
 
-    alt 使用者確認
-        Browser-->>ActionSection: 確認
-        ActionSection->>Browser: 開啟檔案選擇器<br/>(accept="image/*")
-        Browser->>User: 顯示相機/相簿選項
-        User->>Browser: 拍照或選擇照片
-        Browser-->>ActionSection: 回傳照片檔案
+    CheckInModal->>Browser: 開啟檔案選擇器 (accept="image/*")
+    Browser->>User: 顯示相機/相簿選項
+    User->>Browser: 拍照或選擇照片
+    Browser-->>ActionSection: 回傳照片檔案
 
-        ActionSection->>Storage: 上傳照片<br/>(workouts/{squadId}/{userId}/{timestamp}.jpg)
-        Storage-->>ActionSection: 回傳照片 URL
+    ActionSection->>Storage: 上傳照片 (workouts/{squadId}/{userId}/{timestamp}.jpg)
+    Storage-->>ActionSection: 回傳照片 URL
 
-        ActionSection->>Firestore: 建立 workout 文件
-        Note over Firestore: userId, squadId, date<br/>imageUrl, note<br/>completedAt
+    ActionSection->>Firestore: 建立 workout 文件
+    Note over Firestore: userId, squadId, date<br/>imageUrl, note<br/>completedAt
 
-        Firestore->>Firestore: 更新 users/{userId}/stats/{date}
-        Firestore->>Firestore: 更新 users/{userId} 統計
-        Firestore->>Firestore: 更新 squads/{squadId} 統計
-        Firestore->>Firestore: 計算並更新 streak
+    Firestore->>Firestore: 更新 users/{userId}/stats/{date}
+    Firestore->>Firestore: 更新 users/{userId} 統計
+    Firestore->>Firestore: 更新 squads/{squadId} 統計
+    Firestore->>Firestore: 計算並更新 streak
 
-        Firestore-->>ActionSection: Check-in 完成
-        ActionSection->>ActionSection: 清空輸入框
-    else 使用者取消
-        Browser-->>ActionSection: 取消
-        Note over ActionSection: 不執行任何操作
-    end
+    Firestore-->>ActionSection: Check-in 完成
+    ActionSection->>ActionSection: 關閉 Modal 並清空狀態
 ```
 
 #### UI 規格
 
 **1. 未完成狀態**
 
-- 顯示訓練內容輸入框
-  - Placeholder: `"e.g., 5k Run + 100 Wall Balls"`
 - 顯示 CHECK-IN 按鈕
   - 圖示：相機圖示（Camera icon from Lucide）
   - 文字：`"CHECK-IN"`
   - 顏色：主題色（lime/green）
+- 點擊後開啟「打卡彈窗 (Check-in Modal)」
 
-**2. 上傳中狀態**
+**2. 打卡彈窗 (Modal)**
+
+- 標題：`"Ready to check in?"`
+- 內容：
+  - 訓練內容輸入框 (Placeholder: `e.g., 5k Run + 100 Wall Balls`)
+  - 觸發按鈕：`"SELECT PHOTO & GO"` (點擊後開啟原生照片選擇)
+- 視覺：全螢幕半透明遮罩，中央卡片式設計。
+
+**3. 上傳中狀態**
 
 - 按鈕文字變為 `"Uploading..."`
 - 顯示旋轉載入動畫（Loader2 icon）
@@ -433,6 +436,7 @@ flowchart LR
   - Font-size: 10px
   - 已完成：綠色文字
   - 未完成：灰色文字
+- **容器留白**：底部增加 `pb-10` 以確保標籤與下方區塊有足夠間隔。
 
 ---
 
@@ -608,6 +612,7 @@ flowchart TB
   - 尺寸：20px
 - 數字：48px、超粗體、主色
 - 單位：`"Days"`（16px、中等粗細、次要色）
+- **即時更新**：使用 Firestore `onSnapshot` 監聽使用者與團隊文件，打卡後立即連動更新。
 
 #### Heatmap 格線規格
 
@@ -903,3 +908,8 @@ docs/
 **變更歷史**：
 
 - 2025-12-23：初始版本，包含完整系統規格和 Firestore 嚴格規範
+- 2025-12-25：UI 優化與 Streak 更新邏輯調整
+  - 打卡流程改為彈窗模式（ActionSection Modal）
+  - 加入 `onSnapshot` 即時監聽 Streak 變化
+  - 加強打卡工作流對 Firestore 最終一致性的處理
+  - EnergyDashboard 布局留白修正

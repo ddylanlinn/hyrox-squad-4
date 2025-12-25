@@ -4,6 +4,7 @@ import {
   collection,
   query,
   where,
+  doc,
   orderBy as firestoreOrderBy,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
@@ -38,8 +39,10 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
   const streak = ref(0); // Squad streak
   const personalStreak = ref(0); // Personal streak
 
-  // Firestore realtime listener unsubscribe function
+  // Firestore realtime listener unsubscribe functions
   let unsubscribeWorkouts: (() => void) | null = null;
+  let unsubscribeSquad: (() => void) | null = null;
+  let unsubscribeUser: (() => void) | null = null;
 
   /**
    * Load dashboard data from Firestore
@@ -130,6 +133,43 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
   }
 
   /**
+   * Setup realtime listeners for squad and user streaks
+   */
+  function setupRealtimeStreaks() {
+    if (!appUserId.value) return;
+
+    // 1. Listen to Squad document
+    const squadRef = doc(db, "squads", squadId);
+    unsubscribeSquad = onSnapshot(squadRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const squadData = docSnap.data();
+        if (streak.value !== squadData.currentStreak) {
+          console.log(
+            "Squad streak updated in real-time:",
+            squadData.currentStreak
+          );
+          streak.value = squadData.currentStreak || 0;
+        }
+      }
+    });
+
+    // 2. Listen to User document
+    const userRef = doc(db, "users", appUserId.value);
+    unsubscribeUser = onSnapshot(userRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        if (personalStreak.value !== userData.currentStreak) {
+          console.log(
+            "Personal streak updated in real-time:",
+            userData.currentStreak
+          );
+          personalStreak.value = userData.currentStreak || 0;
+        }
+      }
+    });
+  }
+
+  /**
    * Cleanup data and listeners
    */
   function cleanup() {
@@ -142,6 +182,14 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
       unsubscribeWorkouts();
       unsubscribeWorkouts = null;
     }
+    if (unsubscribeSquad) {
+      unsubscribeSquad();
+      unsubscribeSquad = null;
+    }
+    if (unsubscribeUser) {
+      unsubscribeUser();
+      unsubscribeUser = null;
+    }
   }
 
   /**
@@ -151,6 +199,7 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
     if (appUserId.value) {
       await loadDashboardData();
       setupRealtimeWorkouts();
+      setupRealtimeStreaks();
     }
   }
 
@@ -160,6 +209,7 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
       console.log("App user bound:", newAppUserId);
       await loadDashboardData();
       setupRealtimeWorkouts();
+      setupRealtimeStreaks();
     } else {
       console.log("App user not bound");
       cleanup();
@@ -168,9 +218,7 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
 
   // Cleanup on unmount
   onUnmounted(() => {
-    if (unsubscribeWorkouts) {
-      unsubscribeWorkouts();
-    }
+    cleanup();
   });
 
   /**

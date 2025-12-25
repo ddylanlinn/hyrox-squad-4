@@ -125,6 +125,22 @@ async function refreshPersonalStreak(userId: string): Promise<{
   longestStreak: number;
 }> {
   const userStats = await getUserStats(userId);
+  const todayString = getTodayString();
+
+  // Optimization: If userStats doesn't have today yet (eventual consistency), add it
+  // This ensures calculateStreak sees the workout that was just created
+  const hasToday = userStats.some((s) => s.date === todayString);
+  if (!hasToday) {
+    userStats.unshift({
+      date: todayString,
+      userId,
+      count: 1,
+      workoutIds: [], // Not needed for calculation
+      createdAt: null as any,
+      updatedAt: null as any,
+    });
+  }
+
   const personalStreak = calculateStreak(userStats);
 
   // Get existing longest streak
@@ -170,8 +186,22 @@ async function refreshSquadStreak(squadId: string): Promise<{
 
   // Get bound members' stats only
   const memberStatsMap = new Map<string, UserDailyStats[]>();
+  const todayString = getTodayString();
+
   for (const memberId of boundMemberIds) {
     const stats = await getUserStats(memberId);
+
+    // Optimization: Ensure today is reflected for all bound members if they just checked in
+    // This handles eventual consistency where getDocs might not see the latest write yet
+    const hasToday = stats.some((s) => s.date === todayString);
+    if (!hasToday) {
+      // We check today's stats specifically for this member to be sure
+      const todayStats = await getUserStatsByDate(memberId, todayString);
+      if (todayStats && todayStats.count > 0) {
+        stats.unshift(todayStats);
+      }
+    }
+
     memberStatsMap.set(memberId, stats);
   }
 
