@@ -61,6 +61,7 @@
           :history="history"
           :todayCount="todaysRecords.length"
           :streak="streak"
+          :personalStreak="personalStreak"
         />
 
         <!-- Section B: Energy -->
@@ -123,6 +124,7 @@ const {
   todaysRecords,
   users,
   streak,
+  personalStreak,
   loadDashboardData,
   initialize: initializeDashboard,
   waitForCheckInUpdate,

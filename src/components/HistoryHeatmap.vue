@@ -1,43 +1,83 @@
 <template>
-  <div class="w-full px-5 pt-8 pb-4">
+  <div class="w-full px-5 pt-8">
     <!-- Top Section: Countdown & Streak -->
-    <div class="flex justify-between items-start mb-6 gap-4">
-      <!-- Race Countdown -->
-      <div class="flex-1">
-        <h2
-          class="text-secondary text-xs font-bold uppercase tracking-widest mb-1"
-        >
-          Race Countdown
-        </h2>
-        <div class="flex items-baseline gap-2">
+    <div class="flex justify-between items-center mb-6 gap-2">
+      <!-- Race Countdown (Left) -->
+      <div class="flex-1 flex flex-col items-start min-w-0 relative">
+        <div class="flex items-center gap-1 mb-1">
+          <h2
+            class="text-secondary text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
+          >
+            Countdown
+          </h2>
+          <button
+            @click="showTooltip = !showTooltip"
+            class="text-tertiary hover:text-secondary transition-colors"
+          >
+            <Info :size="12" />
+          </button>
+        </div>
+
+        <div class="flex items-baseline gap-1">
           <span
-            class="text-5xl font-black text-primary tracking-tighter leading-none"
+            class="text-4xl font-black text-primary tracking-tighter leading-none"
             >{{ daysUntilRace }}</span
           >
-          <span class="text-secondary font-medium text-base">Days</span>
+          <span class="text-secondary font-medium text-xs">Days</span>
         </div>
-        <p class="text-xs text-tertiary mt-1">
-          Until HYROX {{ COMPETITION_DATE.replace(/-/g, "/") }}
-        </p>
+
+        <!-- Tooltip -->
+        <div
+          v-if="showTooltip"
+          v-click-away="() => (showTooltip = false)"
+          class="absolute top-6 left-0 z-20 bg-white border border-border rounded-md shadow-lg p-2 whitespace-nowrap animate-in fade-in zoom-in duration-200"
+        >
+          <p class="text-[10px] font-bold text-primary">
+            HYROX Taipei {{ COMPETITION_DATE.replace(/-/g, "/") }}
+          </p>
+        </div>
       </div>
 
-      <!-- Current Streak -->
-      <div class="flex-1 text-right">
+      <!-- Squad Streak (Middle) -->
+      <div class="flex-1 flex flex-col items-center min-w-0 px-2">
         <h2
-          class="text-secondary text-xs font-bold uppercase tracking-widest mb-1"
+          class="text-secondary text-[10px] font-bold uppercase tracking-widest mb-1 whitespace-nowrap"
         >
-          Current Streak
+          Streak
         </h2>
-        <div class="flex items-baseline gap-2 justify-end">
+        <div
+          class="flex items-baseline gap-1.5 px-3 py-1 rounded-full transition-all duration-500"
+          :class="streak > 0 ? 'streak-bg-active' : ''"
+        >
           <Flame
-            :size="20"
+            :size="24"
             :class="streak > 0 ? 'streak-active' : 'streak-inactive'"
           />
           <span
             class="text-5xl font-black text-primary tracking-tighter leading-none"
             >{{ streak }}</span
           >
-          <span class="text-secondary font-medium text-base">Days</span>
+          <span class="text-secondary font-medium text-xs">Days</span>
+        </div>
+      </div>
+
+      <!-- Personal Streak (Right) -->
+      <div class="flex-1 flex flex-col items-end min-w-0">
+        <h2
+          class="text-secondary text-[10px] font-bold uppercase tracking-widest mb-1 whitespace-nowrap"
+        >
+          P. Streak
+        </h2>
+        <div class="flex items-baseline gap-1">
+          <Flame
+            :size="16"
+            :class="personalStreak > 0 ? 'streak-active' : 'streak-inactive'"
+          />
+          <span
+            class="text-4xl font-black text-primary tracking-tighter leading-none"
+            >{{ personalStreak }}</span
+          >
+          <span class="text-secondary font-medium text-xs">Days</span>
         </div>
       </div>
     </div>
@@ -67,8 +107,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-import { Flame, Zap } from "lucide-vue-next";
+import { ref, computed } from "vue";
+import { Flame, Zap, Info } from "lucide-vue-next";
 import type { DailyStats } from "../types";
 import { COMPETITION_DATE, HEATMAP_DAYS_COUNT } from "../constants";
 import { getTodayString, toLocalDateString } from "../services/firestore";
@@ -77,9 +117,12 @@ interface Props {
   history: DailyStats[];
   todayCount: number;
   streak: number;
+  personalStreak: number;
 }
 
 const props = defineProps<Props>();
+
+const showTooltip = ref(false);
 
 // Calculate days until race
 const daysUntilRace = computed(() => {
@@ -184,6 +227,11 @@ const getColorClass = (count: number): string => {
 
 .streak-inactive {
   color: var(--color-streak-inactive);
+}
+
+.streak-bg-active {
+  background: rgba(234, 88, 12, 0.08); /* Flame orange with low opacity */
+  box-shadow: 0 0 20px rgba(234, 88, 12, 0.1);
 }
 
 /* ========== Text Colors ========== */

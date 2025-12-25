@@ -491,16 +491,61 @@ stateDiagram-v2
 ```mermaid
 flowchart TB
     subgraph HistoryHeatmap[History Heatmap]
-        direction LR
-        Countdown[比賽倒數計時]
-        Streak[當前 Streak]
+        direction TB
+        subgraph TopRow[Top Section]
+            direction LR
+            Countdown[Race Countdown<br/>左側]
+            SquadStreak[Squad Streak<br/>中間]
+            PersonalStreak[Personal Streak<br/>右側]
+        end
         Grid[Heatmap 格線]
     end
 
-    Countdown -->|計算天數| RaceDay[比賽日期 - 今天]
-    Streak -->|計算連續天數| StreakLogic[所有已綁定使用者<br/>都完成打卡則 +1]
-    Grid -->|80 天| DisplayDays[從比賽前 79 天<br/>到比賽當天]
-    Grid -->|顏色深淺| ColorMap[0人=空心<br/>1人=淺綠<br/>2人=中綠<br/>3人=深綠<br/>4人=最深綠]
+    Countdown -->|天數| RaceDay[2026/02/28 - Today]
+    SquadStreak -->|計算| SquadLogic[所有已綁定成員完成]
+    PersonalStreak -->|計算| PersonalLogic[當前登入者連續天數]
+    Grid -->|80 天| DisplayDays[從比賽前 79 天到比賽當天]
+```
+
+#### 頂部佈局規格
+
+**1. Race Countdown (左側)**
+
+- 標題：`"RACE COUNTDOWN"`
+- 內容：顯示距離比賽還剩多少天（天數 + `Days` 單位）。
+- 底部文字：`"Until HYROX 2026/02/28"`。
+
+**2. Squad Streak (中間)**
+
+- 標題：`"SQUAD STREAK"`
+- 圖示：火焰圖示 (Flame)。
+- 內容：顯示整隊連續打卡天數。當所有已綁定使用者完成打卡則 +1。
+- 視覺：置中對齊。
+
+**3. Personal Streak (右側)**
+
+- 標題：`"PERSONAL STREAK"`
+- 圖示：火焰圖示 (Flame)。
+- 內容：顯示當前登入使用者的連續打卡天數。
+- 視覺：靠右對齊。
+
+#### Streak 計算規格
+
+**1. Squad Streak 計算邏輯**（關鍵：只計算已綁定的使用者）
+
+```
+規則：
+- 如果「所有已綁定登入的使用者」在當天都完成打卡 → streak +1
+- 如果任何一位已綁定使用者未完成 → streak 歸零（明天若完成則重新計為 1）
+```
+
+**2. Personal Streak 計算邏輯**
+
+```
+規則：
+- 僅計算「當前登入使用者」的連續打卡天數。
+- 如果當天已完成打卡 → streak 為包含今天的連續天數。
+- 如果當天未完成，但昨天有完成 → streak 展示昨天的值（直到換日）。
 ```
 
 #### 比賽倒數計時規格

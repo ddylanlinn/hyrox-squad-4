@@ -36,6 +36,7 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
   const todaysRecords = ref<WorkoutRecord[]>([]);
   const users = ref<User[]>([]);
   const streak = ref(0); // Squad streak
+  const personalStreak = ref(0); // Personal streak
 
   // Firestore realtime listener unsubscribe function
   let unsubscribeWorkouts: (() => void) | null = null;
@@ -66,6 +67,11 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
         streak.value = data.squad.currentStreak || 0;
       }
 
+      // Calculate personal streak
+      if (data.user) {
+        personalStreak.value = data.user.currentStreak || 0;
+      }
+
       if (data.todayWorkouts) {
         todaysRecords.value = data.todayWorkouts.map(
           convertWorkoutDocumentToRecord
@@ -82,6 +88,7 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
         todayWorkouts: todaysRecords.value.length,
         users: users.value.length,
         squadStreak: streak.value,
+        personalStreak: personalStreak.value,
       });
     } catch (err) {
       console.error("Failed to load dashboard data:", err);
@@ -130,6 +137,7 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
     todaysRecords.value = [];
     users.value = [];
     streak.value = 0;
+    personalStreak.value = 0;
     if (unsubscribeWorkouts) {
       unsubscribeWorkouts();
       unsubscribeWorkouts = null;
@@ -244,6 +252,7 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
     todaysRecords,
     users,
     streak,
+    personalStreak,
 
     // Methods
     loadDashboardData,

@@ -13,7 +13,9 @@ service firebase.storage {
     // Validate image file
     function isValidImage() {
       return request.resource.size < 10 * 1024 * 1024 &&  // Max 10MB (updated)
-             request.resource.contentType.matches('image/.*');  // Must be image
+             (request.resource.contentType.matches('image/.*') || 
+              request.resource.contentType == 'image/heic' || 
+              request.resource.contentType == 'image/heif');
     }
     
     // ==================== Workout Images ====================

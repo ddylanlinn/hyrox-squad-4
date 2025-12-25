@@ -12,7 +12,8 @@
   "dependencies": {
     "browser-image-compression": "^2.0.2",
     "firebase": "^12.6.0",
-    "vue": "^3.5.25"
+    "vue": "^3.5.25",
+    "vue3-click-away": "^1.2.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",

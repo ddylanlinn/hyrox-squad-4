@@ -80,8 +80,13 @@ export async function uploadWorkoutImage(
   const storageRef = ref(storage, storagePath);
 
   // Upload file
+  console.log(
+    `Uploading to path: ${storagePath}, type: ${
+      compressedFile.type || "image/jpeg"
+    }`
+  );
   const snapshot = await uploadBytes(storageRef, compressedFile, {
-    contentType: compressedFile.type,
+    contentType: compressedFile.type || "image/jpeg",
   });
 
   // Get download URL
@@ -133,8 +138,13 @@ export async function uploadUserAvatar(
   const storagePath = `avatars/${fileName}`;
   const storageRef = ref(storage, storagePath);
 
+  console.log(
+    `Uploading avatar to path: ${storagePath}, type: ${
+      compressedFile.type || "image/jpeg"
+    }`
+  );
   const snapshot = await uploadBytes(storageRef, compressedFile, {
-    contentType: compressedFile.type,
+    contentType: compressedFile.type || "image/jpeg",
   });
 
   const downloadURL = await getDownloadURL(snapshot.ref);
