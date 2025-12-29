@@ -611,7 +611,12 @@ flowchart TB
   - 尺寸：20px
 - 數字：48px、超粗體、主色
 - 單位：`"Days"`（16px、中等粗細、次要色）
-- **即時更新**：使用 Firestore `onSnapshot` 監聽使用者與團隊文件，打卡後立即連動更新。
+- **即時更新機制**：
+  - 使用 Firestore `onSnapshot` 監聽 `workouts` collection 變化
+  - 當 `todaysRecords` 更新時，透過 Vue `watch` hook 觸發 streak 重算
+  - Personal Streak：偵測當前用戶是否有新 record，樂觀更新 +1
+  - Squad Streak：偵測是否所有成員都完成打卡，若是則 +1
+  - 無需頁面 reload 即可即時反映變化
 
 #### Heatmap 格線規格
 
@@ -956,3 +961,6 @@ docs/
   - 重構資料結構，將資料 (Constants) 與邏輯 (Utils) 分離
   - UI 全面升級：Slate 漸層色、雙行標題 (英中)、極簡 RUN 區塊
   - 優化 100 Reps 排版與重量欄位顯眼度
+- 2025-12-29：修復 Streak 即時更新問題
+  - 新增 `watch(todaysRecords, ...)` hook 監聽打卡記錄變化
+  - 打卡後自動重算 Personal/Squad Streak，無需 reload

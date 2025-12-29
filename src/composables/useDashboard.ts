@@ -224,6 +224,67 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
   });
 
   /**
+   * Watch for today's records changes and recalculate streaks
+   * This enables real-time streak updates after check-in
+   */
+  watch(
+    todaysRecords,
+    (newRecords, oldRecords) => {
+      // Skip if no user bound or during initial load
+      if (!appUserId.value || loading.value) return;
+
+      // Detect if current user has a new record
+      const oldUserRecord = oldRecords?.find(
+        (r) => r.userId === appUserId.value
+      );
+      const newUserRecord = newRecords.find(
+        (r) => r.userId === appUserId.value
+      );
+
+      const hasNewPersonalRecord = !oldUserRecord && !!newUserRecord;
+
+      // Recalculate personal streak if user just checked in
+      if (hasNewPersonalRecord) {
+        // Optimistic update: user checked in today, so streak should include today
+        // We add 1 to the current streak (assuming we had a streak going)
+        // This is a simple heuristic that works for the common case
+        personalStreak.value = personalStreak.value + 1;
+        console.log(
+          "Personal streak updated (optimistic):",
+          personalStreak.value
+        );
+      }
+
+      // Recalculate squad streak when any new record is added
+      const hasNewRecords = newRecords.length > (oldRecords?.length || 0);
+      if (hasNewRecords) {
+        // Check if all users have now checked in today
+        const allUsersCheckedIn = users.value.every((user) =>
+          newRecords.some((r) => r.userId === user.id)
+        );
+
+        // If all users checked in and this is the first time all completed,
+        // increment squad streak
+        const wasAllCheckedIn =
+          oldRecords &&
+          users.value.length > 0 &&
+          users.value.every((user) =>
+            oldRecords.some((r) => r.userId === user.id)
+          );
+
+        if (allUsersCheckedIn && !wasAllCheckedIn) {
+          streak.value = streak.value + 1;
+          console.log(
+            "Squad streak updated (all members completed):",
+            streak.value
+          );
+        }
+      }
+    },
+    { deep: true }
+  );
+
+  /**
    * Wait for check-in update to appear in realtime listener
    *
    * Strategy:
