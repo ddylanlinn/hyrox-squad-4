@@ -107,7 +107,6 @@ flowchart TB
 | `memberIds`           | string[]  | ✅   | 成員 ID 列表 ['u1', 'u2', 'u3', 'u4'] |
 | `memberCount`         | number    | ✅   | 成員數量                              |
 | `captainId`           | string    | ❌   | 隊長 ID                               |
-| `currentStreak`       | number    | ✅   | 當前連續天數                          |
 | `averageStreak`       | number    | ✅   | 平均連續天數                          |
 | `totalWorkouts`       | number    | ✅   | 總訓練次數                            |
 | `lastActivityDate`    | string    | ❌   | 最後活動日期 (YYYY-MM-DD)             |
@@ -129,7 +128,6 @@ flowchart TB
 | `initials`        | string    | ✅   | 姓名縮寫                   |
 | `avatarUrl`       | string    | ❌   | 頭像 URL                   |
 | `role`            | string    | ✅   | 角色 (captain / member)    |
-| `currentStreak`   | number    | ✅   | 個人當前連續天數           |
 | `totalWorkouts`   | number    | ✅   | 個人總訓練次數             |
 | `lastWorkoutDate` | string    | ❌   | 最後訓練日期 (YYYY-MM-DD)  |
 | `joinedAt`        | Timestamp | ✅   | 加入時間                   |
@@ -149,7 +147,6 @@ flowchart TB
 | `avatarUrl`       | string    | ❌   | 頭像 URL                             |
 | `currentSquadId`  | string    | ❌   | 當前團隊 ID                          |
 | `squadIds`        | string[]  | ❌   | 參與的團隊 ID 列表                   |
-| `currentStreak`   | number    | ❌   | 當前連續天數                         |
 | `longestStreak`   | number    | ❌   | 最長連續天數                         |
 | `totalWorkouts`   | number    | ❌   | 總訓練次數                           |
 | `lastWorkoutDate` | string    | ❌   | 最後訓練日期 (YYYY-MM-DD)            |

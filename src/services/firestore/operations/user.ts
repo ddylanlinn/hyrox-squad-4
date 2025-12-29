@@ -79,16 +79,15 @@ export async function updateUser(
 }
 
 /**
- * Update user streak and total workouts
+ * Update user streak (longestStreak only) and total workouts
+ * Note: currentStreak is calculated in real-time, not cached
  */
 export async function updateUserStreak(
   userId: string,
-  currentStreak: number,
   longestStreak: number,
   incrementTotalWorkouts: boolean = false
 ): Promise<void> {
   const updateData: Partial<UserDocument> = {
-    currentStreak,
     longestStreak,
     lastWorkoutDate: new Date().toISOString().split("T")[0],
   };

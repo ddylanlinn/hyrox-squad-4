@@ -26,10 +26,10 @@ export async function getSquad(squadId: string): Promise<SquadDocument | null> {
 
 /**
  * Get squad members list with real-time data from users collection
- * Sort by consecutive days in descending order
+ * Sort by total workouts in descending order
  *
  * This function reads member data from:
- * - users/{userId} for real-time stats (currentStreak, totalWorkouts, etc.)
+ * - users/{userId} for real-time stats (totalWorkouts, etc.)
  * - squads/{squadId}/members/{userId} for squad-specific info (joinedAt, role)
  */
 export async function getSquadMembers(
@@ -67,7 +67,6 @@ export async function getSquadMembers(
       joinedAt: memberData.joinedAt || Timestamp.now(),
       role: memberData.role || "member",
       // Real-time stats from user document
-      currentStreak: userData.currentStreak || 0,
       totalWorkouts: userData.totalWorkouts || 0,
       lastWorkoutDate: userData.lastWorkoutDate,
       // User basic data
@@ -84,8 +83,8 @@ export async function getSquadMembers(
     (member): member is SquadMemberDocument => member !== null
   );
 
-  // Sort by currentStreak in descending order
-  return members.sort((a, b) => b.currentStreak - a.currentStreak);
+  // Sort by totalWorkouts in descending order
+  return members.sort((a, b) => b.totalWorkouts - a.totalWorkouts);
 }
 
 /**
@@ -103,15 +102,13 @@ export async function updateSquad(
 }
 
 /**
- * Update squad streak
+ * Update squad streak (averageStreak only, currentStreak is calculated in real-time)
  */
 export async function updateSquadStreak(
   squadId: string,
-  currentStreak: number,
   averageStreak: number
 ): Promise<void> {
   await updateSquad(squadId, {
-    currentStreak,
     averageStreak,
     lastActivityDate: new Date().toISOString().split("T")[0],
   });

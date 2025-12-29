@@ -148,7 +148,8 @@ async function refreshPersonalStreak(userId: string): Promise<{
   const longestStreak = Math.max(personalStreak, userData?.longestStreak || 0);
 
   // Persist to Firestore (with totalWorkouts increment during check-in)
-  await updateUserStreak(userId, personalStreak, longestStreak, true);
+  // Note: We only persist longestStreak, currentStreak is calculated in real-time
+  await updateUserStreak(userId, longestStreak, true);
 
   return { personalStreak, longestStreak };
 }
@@ -217,7 +218,8 @@ async function refreshSquadStreak(squadId: string): Promise<{
   });
 
   // Persist to Firestore
-  await updateSquadStreak(squadId, squadStreak, squadAverageStreak);
+  // Note: We only persist averageStreak, currentStreak is calculated in real-time
+  await updateSquadStreak(squadId, squadAverageStreak);
 
   return { squadStreak, squadAverageStreak };
 }

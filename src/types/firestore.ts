@@ -16,7 +16,6 @@ export interface SquadDocument {
   captainId?: string;
 
   // Squad statistics (cached fields)
-  currentStreak: number;
   averageStreak: number;
   totalWorkouts: number;
   lastActivityDate?: string; // YYYY-MM-DD
@@ -35,7 +34,7 @@ export interface SquadDocument {
  *
  * Collection: squads/{squadId}/members/{userId}
  *
- * Note: User stats (currentStreak, totalWorkouts) are read from users/{userId}
+ * Note: User stats (totalWorkouts) are read from users/{userId}
  * at runtime and merged into this interface for convenience
  */
 export interface SquadMemberDocument {
@@ -47,7 +46,6 @@ export interface SquadMemberDocument {
 
   // Runtime-merged fields from users/{userId}
   // These are NOT stored in the subcollection, but merged by getSquadMembers()
-  currentStreak: number;
   totalWorkouts: number;
   lastWorkoutDate?: string; // YYYY-MM-DD
   name: string;
@@ -104,7 +102,6 @@ export interface UserDocument {
   squadIds?: string[]; // Made optional, new users may not have joined a squad yet
 
   // Statistics fields
-  currentStreak?: number; // Made optional
   longestStreak?: number; // Made optional
   totalWorkouts?: number; // Made optional
   lastWorkoutDate?: string; // YYYY-MM-DD

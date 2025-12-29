@@ -34,6 +34,7 @@ export interface DashboardData {
   userStats: UserDailyStats[];
   todayWorkouts: WorkoutDocument[];
   teamHistory: TeamDailyStats[]; // Added: aggregated team stats for Heatmap
+  memberStatsMap: Map<string, UserDailyStats[]>; // For real-time streak calculation
 }
 
 /**
@@ -127,6 +128,7 @@ export async function getDashboardData(
     userStats,
     todayWorkouts,
     teamHistory,
+    memberStatsMap,
   };
 }
 

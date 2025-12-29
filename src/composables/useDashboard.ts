@@ -11,8 +11,10 @@ import { db } from "../config/firebase";
 import {
   getDashboardData,
   calculateStreak,
+  calculateSquadStreak,
   getTodayString,
 } from "../services/firestore";
+import { getBoundMemberIds } from "../services/auth/binding";
 import {
   convertTeamDailyStatsToHistory,
   convertWorkoutDocumentToRecord,
@@ -66,15 +68,23 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
         history.value = convertTeamDailyStatsToHistory(data.teamHistory);
       }
 
-      // Use squad streak from squad document (already calculated during check-in)
+      // Get squad name
       if (data.squad) {
-        streak.value = data.squad.currentStreak || 0;
         squadName.value = data.squad.name || "";
       }
 
-      // Calculate personal streak
-      if (data.user) {
-        personalStreak.value = data.user.currentStreak || 0;
+      // Calculate personal streak in real-time from userStats
+      if (data.userStats) {
+        personalStreak.value = calculateStreak(data.userStats);
+      }
+
+      // Calculate squad streak in real-time from memberStatsMap
+      if (data.squad?.memberIds && data.memberStatsMap) {
+        const boundMemberIds = await getBoundMemberIds(data.squad.memberIds);
+        streak.value = calculateSquadStreak(
+          data.memberStatsMap,
+          boundMemberIds
+        );
       }
 
       if (data.todayWorkouts) {
@@ -135,42 +145,28 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
   }
 
   /**
-   * Setup realtime listeners for squad and user streaks
+   * Setup realtime listener for squad name changes
+   * Note: Streak is calculated in real-time, not from cached values
    */
   function setupRealtimeStreaks() {
     if (!appUserId.value) return;
 
-    // 1. Listen to Squad document
+    // Listen to Squad document for name changes only
     const squadRef = doc(db, "squads", squadId);
     unsubscribeSquad = onSnapshot(squadRef, (docSnap) => {
       if (docSnap.exists()) {
         const squadData = docSnap.data();
-        if (streak.value !== squadData.currentStreak) {
-          console.log(
-            "Squad streak updated in real-time:",
-            squadData.currentStreak
-          );
-          streak.value = squadData.currentStreak || 0;
-        }
         if (squadName.value !== squadData.name) {
           squadName.value = squadData.name || "";
         }
       }
     });
 
-    // 2. Listen to User document
+    // Note: Personal streak is calculated in real-time from userStats
+    // We still listen to user document for potential future fields
     const userRef = doc(db, "users", appUserId.value);
-    unsubscribeUser = onSnapshot(userRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const userData = docSnap.data();
-        if (personalStreak.value !== userData.currentStreak) {
-          console.log(
-            "Personal streak updated in real-time:",
-            userData.currentStreak
-          );
-          personalStreak.value = userData.currentStreak || 0;
-        }
-      }
+    unsubscribeUser = onSnapshot(userRef, () => {
+      // Reserved for future use
     });
   }
 
