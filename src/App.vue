@@ -40,10 +40,11 @@
             <div v-else class="user-avatar-placeholder">
               {{ getUserInitials(user) }}
             </div>
-            <span class="user-name">{{
+            <!-- <span class="user-name">{{
               user.displayName || user.email || "Guest"
-            }}</span>
+            }}</span> -->
           </div>
+          <div class="squad-name">{{ squadName }}</div>
           <button @click="handleSignOut" class="sign-out-btn" title="Logout">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path
@@ -124,6 +125,7 @@ const {
   todaysRecords,
   users,
   streak,
+  squadName,
   personalStreak,
   loadDashboardData,
   initialize: initializeDashboard,
@@ -226,6 +228,20 @@ const handleSignOut = async () => {
   position: sticky;
   top: 0;
   z-index: 10;
+  gap: 1rem;
+}
+
+.squad-name {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 50%;
 }
 
 .user-info {

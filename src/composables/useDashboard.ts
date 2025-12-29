@@ -37,6 +37,7 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
   const todaysRecords = ref<WorkoutRecord[]>([]);
   const users = ref<User[]>([]);
   const streak = ref(0); // Squad streak
+  const squadName = ref(""); // Squad name
   const personalStreak = ref(0); // Personal streak
 
   // Firestore realtime listener unsubscribe functions
@@ -68,6 +69,7 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
       // Use squad streak from squad document (already calculated during check-in)
       if (data.squad) {
         streak.value = data.squad.currentStreak || 0;
+        squadName.value = data.squad.name || "";
       }
 
       // Calculate personal streak
@@ -150,6 +152,9 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
           );
           streak.value = squadData.currentStreak || 0;
         }
+        if (squadName.value !== squadData.name) {
+          squadName.value = squadData.name || "";
+        }
       }
     });
 
@@ -177,6 +182,7 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
     todaysRecords.value = [];
     users.value = [];
     streak.value = 0;
+    squadName.value = "";
     personalStreak.value = 0;
     if (unsubscribeWorkouts) {
       unsubscribeWorkouts();
@@ -300,6 +306,7 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
     todaysRecords,
     users,
     streak,
+    squadName,
     personalStreak,
 
     // Methods
