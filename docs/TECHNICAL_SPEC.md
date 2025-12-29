@@ -613,10 +613,10 @@ flowchart TB
 - 單位：`"Days"`（16px、中等粗細、次要色）
 - **即時更新機制**：
   - 使用 Firestore `onSnapshot` 監聽 `workouts` collection 變化
-  - 當 `todaysRecords` 更新時，透過 Vue `watch` hook 觸發 streak 重算
-  - Personal Streak：偵測當前用戶是否有新 record，樂觀更新 +1
-  - Squad Streak：偵測是否所有成員都完成打卡，若是則 +1
-  - 無需頁面 reload 即可即時反映變化
+  - 當 `todaysRecords` 有新增 record 時，觸發 streak 重算
+  - 重算邏輯從 Firestore `users/{userId}/stats/{date}` 取得資料
+  - 使用 `calculateStreak()` 和 `calculateSquadStreak()` 正確計算
+  - Squad Streak 只計算**已綁定 (bound) 的成員**，而非全部成員
 
 #### Heatmap 格線規格
 
@@ -962,5 +962,7 @@ docs/
   - UI 全面升級：Slate 漸層色、雙行標題 (英中)、極簡 RUN 區塊
   - 優化 100 Reps 排版與重量欄位顯眼度
 - 2025-12-29：修復 Streak 即時更新問題
-  - 新增 `watch(todaysRecords, ...)` hook 監聽打卡記錄變化
-  - 打卡後自動重算 Personal/Squad Streak，無需 reload
+  - 新增 `watch(todaysRecords, ...)` hook 監聯打卡記錄變化
+  - 修復樂觀更新 `+1` 邏輯錯誤，改為從 Firestore 重新計算
+  - 修復 Squad Streak 使用全部成員而非 bound members 的問題
+  - 新增 `boundMemberIds` state 快取已綁定成員

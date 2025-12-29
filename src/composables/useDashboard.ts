@@ -41,6 +41,10 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
   const streak = ref(0); // Squad streak
   const squadName = ref(""); // Squad name
   const personalStreak = ref(0); // Personal streak
+  const boundMemberIds = ref<string[]>([]); // Cached bound member IDs for streak calculation
+
+  // Flag to prevent duplicate reloads during realtime updates
+  let isReloading = false;
 
   // Firestore realtime listener unsubscribe functions
   let unsubscribeWorkouts: (() => void) | null = null;
@@ -80,11 +84,9 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
 
       // Calculate squad streak in real-time from memberStatsMap
       if (data.squad?.memberIds && data.memberStatsMap) {
-        const boundMemberIds = await getBoundMemberIds(data.squad.memberIds);
-        streak.value = calculateSquadStreak(
-          data.memberStatsMap,
-          boundMemberIds
-        );
+        const boundIds = await getBoundMemberIds(data.squad.memberIds);
+        boundMemberIds.value = boundIds; // Cache for later use in watch
+        streak.value = calculateSquadStreak(data.memberStatsMap, boundIds);
       }
 
       if (data.todayWorkouts) {
@@ -226,59 +228,45 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
   /**
    * Watch for today's records changes and recalculate streaks
    * This enables real-time streak updates after check-in
+   *
+   * Strategy: Instead of optimistic updates which can be incorrect in edge cases,
+   * we reload dashboard data to ensure streaks are calculated correctly.
    */
   watch(
     todaysRecords,
-    (newRecords, oldRecords) => {
-      // Skip if no user bound or during initial load
-      if (!appUserId.value || loading.value) return;
+    async (newRecords, oldRecords) => {
+      // Skip if no user bound or during initial load or already reloading
+      if (!appUserId.value || loading.value || isReloading) return;
 
-      // Detect if current user has a new record
-      const oldUserRecord = oldRecords?.find(
-        (r) => r.userId === appUserId.value
-      );
-      const newUserRecord = newRecords.find(
-        (r) => r.userId === appUserId.value
-      );
-
-      const hasNewPersonalRecord = !oldUserRecord && !!newUserRecord;
-
-      // Recalculate personal streak if user just checked in
-      if (hasNewPersonalRecord) {
-        // Optimistic update: user checked in today, so streak should include today
-        // We add 1 to the current streak (assuming we had a streak going)
-        // This is a simple heuristic that works for the common case
-        personalStreak.value = personalStreak.value + 1;
-        console.log(
-          "Personal streak updated (optimistic):",
-          personalStreak.value
-        );
-      }
-
-      // Recalculate squad streak when any new record is added
+      // Check if there's a meaningful change (new records added)
       const hasNewRecords = newRecords.length > (oldRecords?.length || 0);
-      if (hasNewRecords) {
-        // Check if all users have now checked in today
-        const allUsersCheckedIn = users.value.every((user) =>
-          newRecords.some((r) => r.userId === user.id)
-        );
+      if (!hasNewRecords) return;
 
-        // If all users checked in and this is the first time all completed,
-        // increment squad streak
-        const wasAllCheckedIn =
-          oldRecords &&
-          users.value.length > 0 &&
-          users.value.every((user) =>
-            oldRecords.some((r) => r.userId === user.id)
-          );
+      console.log("New workout record detected, reloading streak data...");
 
-        if (allUsersCheckedIn && !wasAllCheckedIn) {
-          streak.value = streak.value + 1;
-          console.log(
-            "Squad streak updated (all members completed):",
-            streak.value
-          );
+      // Reload to get correct streak calculation
+      // This ensures we use the proper calculateStreak logic rather than optimistic +1
+      isReloading = true;
+      try {
+        // Only reload streak-related data, not full dashboard
+        const data = await getDashboardData(appUserId.value, squadId);
+
+        // Recalculate personal streak
+        if (data.userStats) {
+          personalStreak.value = calculateStreak(data.userStats);
+          console.log("Personal streak recalculated:", personalStreak.value);
         }
+
+        // Recalculate squad streak using cached bound member IDs
+        if (data.memberStatsMap && boundMemberIds.value.length > 0) {
+          streak.value = calculateSquadStreak(
+            data.memberStatsMap,
+            boundMemberIds.value
+          );
+          console.log("Squad streak recalculated:", streak.value);
+        }
+      } finally {
+        isReloading = false;
       }
     },
     { deep: true }
