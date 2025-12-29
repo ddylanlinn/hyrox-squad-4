@@ -343,6 +343,18 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
     });
   }
 
+  /**
+   * Directly update streak values (used by check-in to immediately show results)
+   */
+  function updateStreaks(newPersonalStreak: number, newSquadStreak: number) {
+    personalStreak.value = newPersonalStreak;
+    streak.value = newSquadStreak;
+    console.log("Streaks updated directly:", {
+      personalStreak: newPersonalStreak,
+      squadStreak: newSquadStreak,
+    });
+  }
+
   return {
     // State
     loading,
@@ -358,5 +370,6 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
     loadDashboardData,
     initialize,
     waitForCheckInUpdate,
+    updateStreaks,
   };
 }

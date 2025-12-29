@@ -111,6 +111,7 @@ const {
   loadDashboardData,
   initialize: initializeDashboard,
   waitForCheckInUpdate,
+  updateStreaks,
 } = useDashboard({
   appUserId,
   squadId: CURRENT_SQUAD_ID,
@@ -121,6 +122,7 @@ const { uploading, handleCheckIn: checkIn } = useWorkout({
   appUserId,
   squadId: CURRENT_SQUAD_ID,
   waitForUpdate: waitForCheckInUpdate,
+  onStreakUpdate: updateStreaks,
 });
 
 // Modal State

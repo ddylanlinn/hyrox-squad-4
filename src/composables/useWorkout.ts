@@ -7,6 +7,8 @@ interface UseWorkoutOptions {
   squadId: string;
   /** Optional callback to wait for realtime update after check-in */
   waitForUpdate?: () => Promise<void>;
+  /** Optional callback to update streaks immediately from check-in result */
+  onStreakUpdate?: (personalStreak: number, squadStreak: number) => void;
 }
 
 interface CheckInData {
@@ -21,6 +23,7 @@ export function useWorkout({
   appUserId,
   squadId,
   waitForUpdate,
+  onStreakUpdate,
 }: UseWorkoutOptions) {
   const uploading = ref(false);
 
@@ -65,7 +68,13 @@ export function useWorkout({
         squadStreak: result.squadStreak,
       });
 
-      // 3. Wait for realtime listener to update UI (if callback provided)
+      // 3. Update streaks immediately using check-in result (if callback provided)
+      if (onStreakUpdate) {
+        onStreakUpdate(result.personalStreak, result.squadStreak);
+        console.log("Streaks updated immediately from check-in result");
+      }
+
+      // 4. Wait for realtime listener to update UI (if callback provided)
       if (waitForUpdate) {
         console.log("Waiting for realtime update...");
         await waitForUpdate();
