@@ -8,6 +8,8 @@
 - [系統架構](#系統架構)
 - [資料模型](#資料模型)
 - [功能規格](#功能規格)
+- [Personal Streak (個人連續天數)](#personal-streak-個人連續天數)
+- [Race Guide (HYROX 比賽指南)](#race-guide-hyrox-比賽指南)
 - [技術堆疊](#技術堆疊)
 - [安全規則](#安全規則)
 - [常數設定](#常數設定)
@@ -652,6 +654,44 @@ flowchart TB
 
 ---
 
+## Race Guide (HYROX 比賽指南)
+
+**Race Guide** 是一個動態的參賽指南，根據使用者選擇的比賽組別（Category）即時顯示對應的重量與項目標準。
+
+### 介面設計 (UI/UX)
+
+1. **視覺風格**：
+
+   - **配色**：號碼區塊使用深石板灰漸層（`#334155` → `#1e293b`），數字使用暖黃色（Amber-400）。
+   - **字體**：標籤與數據使用 `Oswald` 粗體，展現運動競技感。
+   - **RUN 區塊**：極簡化處理（h-8），降低視覺干擾，僅作為工作站間的轉場。
+   - **浮水印**：每個工作站背景帶有 80px 的透明圖示。
+
+2. **互動體驗**：
+   - **組別切換**：頂部 sticky 下拉選單，支援 Individual, Doubles, Relay 共 10 種細分組別。
+   - **預設值**：預設進入為 `Relay Mixed`。
+   - **自適應顯示**：若該項目不需要顯示重量（如空字串），UI 會自動隱藏重量欄位。
+   - **雙行標題**：標題顯示英文官方名稱，副標題顯示中文譯名。
+
+### 資料結構
+
+為了保持簡約與易於維護，資料被拆分為三個層次：
+
+1. **`WORKOUT_STATIONS` (常數)**：
+
+   - 定義 8 個固定工作站的名稱 (`title`)、中文標題 (`titleZh`)、圖示與基礎量值（如 1000m, 100 Reps）。
+
+2. **`CATEGORY_WEIGHTS` (常數)**：
+
+   - 對應組別名稱的重量陣列（Indexed Array），索引 0-7 對應 station 1-8。
+   - 支援複合顯示（如男女混合組的 `102/152 kg`）。
+
+3. **`raceUtils.ts` (工具函數)**：
+   - `generateRaceSequence()`：動態生成包含 1km Run 在內的 16 個比賽節點。
+   - `shouldShowWeight()`：處理顯示邏輯。
+
+---
+
 ## 技術堆疊
 
 | 類別     | 技術             | 版本   | 說明              |
@@ -672,6 +712,8 @@ flowchart TB
 /Users/dylan.lin/Dylan/hyrox-squad-4/
 ├── src/
 │   ├── components/          # Vue 組件
+│   │   ├── RaceGuide/              # Race Guide 相關組件
+│   │   │   └── RaceTableRow.vue    # 工作站列表列
 │   │   ├── LoginView.vue           # 登入畫面
 │   │   ├── UserSelection.vue       # 使用者綁定選擇
 │   │   ├── HistoryHeatmap.vue      # Heatmap 和 Streak
@@ -682,6 +724,8 @@ flowchart TB
 │   │   ├── useAuth.ts              # 登入與綁定邏輯
 │   │   ├── useDashboard.ts         # Dashboard 資料載入
 │   │   └── useWorkout.ts           # Check-in 邏輯
+│   ├── utils/              # 通用工具
+│   │   └── raceUtils.ts            # Race Guide 邏輯工具
 │   ├── services/
 │   │   ├── auth/                   # Auth 服務
 │   │   │   ├── index.ts
@@ -700,6 +744,7 @@ flowchart TB
 │   │   └── index.ts                # 通用類型
 │   ├── constants/
 │   │   ├── index.ts                # 常數定義
+│   │   ├── raceData.ts             # Race Guide 資料定義
 │   │   └── errorMessages.ts        # 錯誤訊息
 │   ├── config/
 │   │   └── firebase.ts             # Firebase 設定
@@ -909,7 +954,8 @@ docs/
 
 - 2025-12-23：初始版本，包含完整系統規格和 Firestore 嚴格規範
 - 2025-12-25：UI 優化與 Streak 更新邏輯調整
-  - 打卡流程改為彈窗模式（ActionSection Modal）
-  - 加入 `onSnapshot` 即時監聽 Streak 變化
-  - 加強打卡工作流對 Firestore 最終一致性的處理
-  - EnergyDashboard 布局留白修正
+- 2025-12-29：新增 Race Guide 功能與 UI 重構
+  - 實作 10 種參賽組別的動態重量切換
+  - 重構資料結構，將資料 (Constants) 與邏輯 (Utils) 分離
+  - UI 全面升級：Slate 漸層色、雙行標題 (英中)、極簡 RUN 區塊
+  - 優化 100 Reps 排版與重量欄位顯眼度

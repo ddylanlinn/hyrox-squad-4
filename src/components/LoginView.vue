@@ -138,7 +138,7 @@ const handleEmailLogin = async () => {
   align-items: center;
   justify-content: center;
   min-height: 100dvh;
-  background: linear-gradient(135deg, var(--color-primary) 0%, #1e40af 100%);
+  background: linear-gradient(135deg, #ecf8d7 0%, #dbeafa 100%);
   padding: 1rem;
 }
 
@@ -283,8 +283,9 @@ const handleEmailLogin = async () => {
 }
 
 .email-btn {
-  background: var(--color-primary);
-  color: white;
+  background: #f4f4f5; /* zinc-100 */
+  color: #3f3f46; /* zinc-700 */
+  border: 1px solid #e4e4e7; /* zinc-200 */
 }
 
 .email-btn:hover:not(:disabled) {

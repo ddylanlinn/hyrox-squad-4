@@ -40,7 +40,7 @@ export const COMPETITION_DATE = "2026-02-28";
 /**
  * Number of days to display in history heatmap
  */
-export const HEATMAP_DAYS_COUNT = 80;
+export const HEATMAP_DAYS_COUNT = 64;
 
 // ========== Authentication ==========
 
@@ -56,10 +56,10 @@ export const FIXED_LOGIN_PASSWORD = "Hyrox20260228";
  * Motivational messages for nudging squad members
  */
 export const NUDGE_MESSAGES = [
-  "Wake up squad! Only I have trained today? 😤",
-  "Let's go team! Don't break the streak! 🔥",
-  "Training done. Who's next? ⚡️",
-  "Hyrox waits for no one. Get it done! 🏋️",
+  "Wake up squad! Only I have trained today?",
+  "Let's go team! Don't break the streak!",
+  "Training done. Who's next?",
+  "Hyrox waits for no one. Get it done!",
 ] as const;
 
 /**

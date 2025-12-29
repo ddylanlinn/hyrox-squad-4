@@ -2,6 +2,7 @@
 @import "../../styles/theme.css";
 
 @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Roboto+Condensed:wght@300;400;700&display=swap");
 
 /* Custom scrollbar hiding for clean UI */
 .no-scrollbar::-webkit-scrollbar {
@@ -19,13 +20,49 @@
   transform-origin: 50% 50%;
 }
 
+@theme {
+  --color-primary: #84cc16;
+  --color-primary-600: #65a30d;
+  --color-primary-500: #84cc16;
+  --color-secondary: #000000;
+  --color-background: #f8fafc;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-tertiary: #94a3b8;
+  --color-border: #e2e8f0;
+
+  --color-energy-ring-bg: #f1f5f9;
+  --color-energy-ring-progress: #84cc16;
+  --color-energy-ring-glow: rgba(132, 204, 22, 0.4);
+
+  --color-streak-active: #f97316;
+  --color-streak-inactive: #e2e8f0;
+
+  --color-heatmap-empty: #f1f5f9;
+  --color-heatmap-level-1: #d9f99d;
+  --color-heatmap-level-2: #84cc16;
+  --color-heatmap-level-3: #4d7c0f;
+  --color-heatmap-level-4: #1a2e05;
+  --color-heatmap-today-ring: #0f172a;
+  --color-heatmap-race-icon: #facc15;
+}
+
 /* Base styles */
 @layer base {
   body {
-    @apply bg-white text-zinc-900 antialiased overflow-x-hidden;
+    font-family: "Roboto Condensed", sans-serif;
+    background-color: #fafafa;
+    color: #18181b;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  .brand-font {
+    font-family: "Oswald", sans-serif;
   }
 
   ::selection {
-    @apply bg-lime-400 text-black;
+    background-color: #facc15;
+    color: black;
   }
 }
