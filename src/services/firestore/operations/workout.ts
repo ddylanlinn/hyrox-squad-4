@@ -112,3 +112,78 @@ export async function deleteWorkout(workoutId: string): Promise<void> {
   // await deleteDoc(workoutRef);
   throw new Error("Delete workout not implemented yet");
 }
+
+/**
+ * Get recent workouts for a squad (for timeline view)
+ * Returns workouts from recent days, grouped by date
+ *
+ * @param squadId - Squad ID
+ * @param days - Number of days to fetch (default: 30)
+ * @returns Map of date string to workout documents
+ */
+export async function getRecentWorkouts(
+  squadId: string,
+  days: number = 30
+): Promise<Map<string, WorkoutDocument[]>> {
+  // Calculate the start date
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days + 1);
+  startDate.setHours(0, 0, 0, 0);
+  const startDateString = startDate.toISOString().split("T")[0];
+
+  const workoutsRef = collection(db, "workouts");
+  const workoutsQuery = query(
+    workoutsRef,
+    where("squadId", "==", squadId),
+    where("date", ">=", startDateString),
+    orderBy("date", "desc"),
+    orderBy("completedAt", "desc")
+  );
+
+  const workoutsSnap = await getDocs(workoutsQuery);
+  const workouts = workoutsSnap.docs.map((doc) => doc.data() as WorkoutDocument);
+
+  // Group by date
+  const groupedWorkouts = new Map<string, WorkoutDocument[]>();
+  for (const workout of workouts) {
+    const dateKey = workout.date;
+    if (!groupedWorkouts.has(dateKey)) {
+      groupedWorkouts.set(dateKey, []);
+    }
+    groupedWorkouts.get(dateKey)!.push(workout);
+  }
+
+  return groupedWorkouts;
+}
+
+/**
+ * Get all workouts for a squad (no date limit)
+ */
+export async function getAllWorkouts(
+  squadId: string
+): Promise<Map<string, WorkoutDocument[]>> {
+  const workoutsRef = collection(db, "workouts");
+  const workoutsQuery = query(
+    workoutsRef,
+    where("squadId", "==", squadId),
+    orderBy("date", "desc"),
+    orderBy("completedAt", "desc")
+  );
+
+  const workoutsSnap = await getDocs(workoutsQuery);
+  const workouts = workoutsSnap.docs.map(
+    (doc) => doc.data() as WorkoutDocument
+  );
+
+  // Group by date
+  const groupedWorkouts = new Map<string, WorkoutDocument[]>();
+  for (const workout of workouts) {
+    const dateKey = workout.date;
+    if (!groupedWorkouts.has(dateKey)) {
+      groupedWorkouts.set(dateKey, []);
+    }
+    groupedWorkouts.get(dateKey)!.push(workout);
+  }
+
+  return groupedWorkouts;
+}

@@ -32,19 +32,8 @@
         <!-- Center: Squad Name -->
         <div class="squad-name">{{ squadName }}</div>
 
-        <!-- Right: Actions -->
-        <div class="flex items-center gap-1">
-          <router-link to="/race-guide" class="nav-btn" title="Race Guide">
-            <Map :size="20" />
-          </router-link>
-          <button
-            @click="handleSignOut"
-            class="nav-btn text-zinc-400 hover:text-red-500"
-            title="Logout"
-          >
-            <LogOut :size="20" />
-          </button>
-        </div>
+        <!-- Right: Menu -->
+        <MenuDropdown @logout="handleSignOut" />
       </div>
 
       <!-- Section A: History -->
@@ -92,8 +81,8 @@ import HistoryHeatmap from "../components/HistoryHeatmap.vue";
 import EnergyDashboard from "../components/EnergyDashboard.vue";
 import ActionSection from "../components/ActionSection.vue";
 import PhotoModal from "../components/PhotoModal.vue";
+import MenuDropdown from "../components/MenuDropdown.vue";
 import type { WorkoutRecord } from "../types";
-import { Map, LogOut } from "lucide-vue-next";
 
 // Auth
 const { user, appUserId, signOut } = useAuth();
@@ -233,29 +222,6 @@ const handleSignOut = async () => {
   justify-content: center;
   font-size: 0.75rem;
   font-weight: 600;
-}
-
-.nav-btn {
-  padding: 0.5rem;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: var(--color-text-secondary);
-  transition: color 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.375rem;
-}
-
-.nav-btn:hover {
-  background-color: var(--color-neutral-100);
-  color: var(--color-text-primary);
-}
-
-.nav-btn.text-red-500:hover {
-  color: var(--color-error, #ef4444);
-  background-color: #fee2e2;
 }
 
 /* Loading State */

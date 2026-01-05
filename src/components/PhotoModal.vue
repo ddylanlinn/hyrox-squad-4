@@ -2,30 +2,38 @@
   <Teleport to="body">
     <Transition name="fade">
       <div v-if="isOpen && record && user" class="modal-overlay">
-        <!-- Close Button -->
-        <button @click="emit('close')" class="modal-close-button">
-          <X :size="24" />
-        </button>
+        <div class="modal-container">
+          <!-- Header with Close Button -->
+          <div class="modal-header">
+            <button @click="emit('close')" class="modal-close-button">
+              <X :size="24" />
+            </button>
+          </div>
 
-        <div class="w-full h-full flex flex-col relative">
           <!-- Image Container -->
-          <div class="flex-1 min-h-0 flex items-center justify-center p-4 overflow-hidden">
+          <div class="modal-image-container">
             <img
               :src="record.imageUrl"
               alt="Workout Proof"
-              class="max-h-full max-w-full rounded-lg shadow-2xl object-contain"
+              class="modal-image"
             />
           </div>
 
           <!-- Info Overlay -->
           <div class="modal-info-overlay">
-            <div class="flex items-center gap-3 mb-2">
+            <div class="modal-user-info">
               <div class="modal-avatar">
-                {{ user.initials }}
+                <img
+                  v-if="user.avatarUrl"
+                  :src="user.avatarUrl"
+                  :alt="user.name"
+                  class="modal-avatar-img"
+                />
+                <span v-else>{{ user.initials }}</span>
               </div>
               <div>
-                <h3 class="text-white font-bold text-xl">{{ user.name }}</h3>
-                <div class="flex items-center text-zinc-400 text-xs gap-1">
+                <h3 class="modal-user-name">{{ user.name }}</h3>
+                <div class="modal-time">
                   <Clock :size="12" />
                   <span>{{ formatTime(record.completedAt) }}</span>
                 </div>
@@ -33,7 +41,7 @@
             </div>
 
             <div v-if="record.note" class="modal-quote">
-              <div class="flex gap-2">
+              <div class="modal-quote-content">
                 <Quote :size="16" class="modal-quote-icon" />
                 <p class="modal-quote-text">"{{ record.note }}"</p>
               </div>
@@ -62,9 +70,10 @@ const emit = defineEmits<{
 }>();
 
 const formatTime = (dateString: string) => {
-  return new Date(dateString).toLocaleTimeString([], {
+  return new Date(dateString).toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
   });
 };
 </script>
@@ -80,16 +89,26 @@ const formatTime = (dateString: string) => {
   justify-content: center;
   background-color: var(--color-modal-overlay);
   backdrop-filter: blur(12px);
-  height: 100vh; /* fallback */
-  height: 100dvh; /* dynamic viewport height for mobile */
+  height: 100vh;
+  height: 100dvh;
 }
 
-/* ========== Close Button ========== */
+.modal-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========== Header ========== */
+.modal-header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  padding: 1rem 1rem 0.5rem;
+}
+
 .modal-close-button {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  z-index: 10;
   padding: 0.5rem;
   background-color: rgba(39, 39, 42, 0.5);
   border-radius: 9999px;
@@ -97,13 +116,50 @@ const formatTime = (dateString: string) => {
   backdrop-filter: blur(4px);
 }
 
+/* ========== Image Container ========== */
+.modal-image-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+}
+
+.modal-image {
+  max-height: 100%;
+  max-width: 100%;
+  border-radius: 0.5rem;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  object-fit: contain;
+}
+
 /* ========== Info Overlay ========== */
 .modal-info-overlay {
+  flex-shrink: 0;
   background: linear-gradient(to top, black, rgba(0, 0, 0, 0.8), transparent);
-  padding-top: 3rem;
-  padding-bottom: 2.5rem;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
+  padding: 3rem 1.5rem 2.5rem;
+}
+
+.modal-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.modal-user-name {
+  color: white;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.modal-time {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #a1a1aa;
+  font-size: 0.75rem;
 }
 
 /* ========== Avatar ========== */
@@ -117,6 +173,13 @@ const formatTime = (dateString: string) => {
   justify-content: center;
   color: black;
   font-weight: 700;
+  overflow: hidden;
+}
+
+.modal-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* ========== Quote Box ========== */
@@ -129,13 +192,18 @@ const formatTime = (dateString: string) => {
   backdrop-filter: blur(4px);
 }
 
+.modal-quote-content {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .modal-quote-icon {
   color: var(--color-modal-quote-icon);
   flex-shrink: 0;
 }
 
 .modal-quote-text {
-  color: #e4e4e7; /* zinc-200 */
+  color: #e4e4e7;
   font-size: 0.875rem;
   font-style: italic;
 }

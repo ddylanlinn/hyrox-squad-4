@@ -43,13 +43,15 @@ export async function getAuthBinding(
  * @param provider - Login method (google.com, facebook.com, etc.)
  * @param email - Login email
  * @param displayName - Login display name
+ * @param photoURL - Google profile photo URL
  */
 export async function createAuthBinding(
   firebaseAuthUid: string,
   appUserId: string,
   provider: string,
   email?: string,
-  displayName?: string
+  displayName?: string,
+  photoURL?: string
 ): Promise<void> {
   const bindingRef = doc(db, "auth-bindings", firebaseAuthUid);
 
@@ -64,6 +66,20 @@ export async function createAuthBinding(
   };
 
   await setDoc(bindingRef, bindingData);
+
+  // Update user's avatarUrl if photoURL is provided
+  if (photoURL) {
+    const userRef = doc(db, "users", appUserId);
+    await setDoc(
+      userRef,
+      {
+        avatarUrl: photoURL,
+        updatedAt: Timestamp.now(),
+      },
+      { merge: true }
+    );
+  }
+
   console.log("Auth binding created successfully:", {
     firebaseAuthUid,
     appUserId,
@@ -88,6 +104,41 @@ export async function updateAuthBindingTimestamp(
     },
     { merge: true }
   );
+}
+
+/**
+ * Sync user avatar from Firebase Auth to users collection
+ * Only updates if the avatar URL has changed to avoid unnecessary writes
+ *
+ * @param appUserId - App user ID
+ * @param photoURL - Google profile photo URL
+ * @returns true if avatar was updated, false if skipped (same URL)
+ */
+export async function syncUserAvatar(
+  appUserId: string,
+  photoURL: string
+): Promise<boolean> {
+  const userRef = doc(db, "users", appUserId);
+
+  // Check current avatar to avoid unnecessary writes
+  const userSnap = await getDoc(userRef);
+  const currentAvatarUrl = userSnap.data()?.avatarUrl;
+
+  if (currentAvatarUrl === photoURL) {
+    return false; // Skip update, avatar unchanged
+  }
+
+  await setDoc(
+    userRef,
+    {
+      avatarUrl: photoURL,
+      updatedAt: Timestamp.now(),
+    },
+    { merge: true }
+  );
+
+  console.log("Avatar synced for user:", appUserId);
+  return true;
 }
 
 /**

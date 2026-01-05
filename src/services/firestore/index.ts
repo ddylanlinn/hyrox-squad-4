@@ -54,6 +54,8 @@ export {
   getUserWorkouts,
   createWorkoutRecord,
   deleteWorkout,
+  getRecentWorkouts,
+  getAllWorkouts,
 } from "./operations/workout";
 
 // ============================================================

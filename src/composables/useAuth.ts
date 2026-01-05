@@ -18,7 +18,11 @@ import {
   onAuthStateChange,
   getAuthErrorMessage,
 } from "../services/auth";
-import { getAuthBinding, createAuthBinding } from "../services/auth/binding";
+import {
+  getAuthBinding,
+  createAuthBinding,
+  syncUserAvatar,
+} from "../services/auth/binding";
 
 interface UseAuthReturn {
   user: Ref<FirebaseUser | null>;
@@ -56,6 +60,17 @@ export function useAuth(): UseAuthReturn {
         appUserId.value = binding.appUserId;
         needsBinding.value = false;
         console.log("App user already bound:", binding.appUserId);
+
+        // Sync avatar if user has a photo (non-blocking, only syncs if changed)
+        if (firebaseUser.photoURL) {
+          syncUserAvatar(binding.appUserId, firebaseUser.photoURL)
+            .then((updated) => {
+              if (updated) {
+                console.log("Avatar updated for user:", binding.appUserId);
+              }
+            })
+            .catch((err) => console.warn("Failed to sync avatar:", err));
+        }
       } else {
         // Not bound, need to select
         appUserId.value = null;
@@ -122,7 +137,8 @@ export function useAuth(): UseAuthReturn {
         selectedAppUserId,
         provider,
         user.value.email || undefined,
-        user.value.displayName || undefined
+        user.value.displayName || undefined,
+        user.value.photoURL || undefined
       );
 
       appUserId.value = selectedAppUserId;

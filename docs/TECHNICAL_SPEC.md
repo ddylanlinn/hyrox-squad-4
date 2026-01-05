@@ -15,6 +15,8 @@
   - [Heatmap 熱力圖](#5-heatmap-熱力圖上半部)
   - [Streak 連續天數](#6-streak-連續天數上半部)
   - [Race Guide 比賽指南](#7-race-guide-比賽指南)
+  - [Timeline 時間軸](#8-timeline-時間軸)
+  - [Avatar 同步機制](#9-avatar-同步機制)
 - [技術堆疊](#技術堆疊)
 - [安全規則](#安全規則)
 - [Firestore 嚴格規格與變更管理](#firestore-嚴格規格與變更管理)
@@ -35,6 +37,8 @@
 - ✅ **Streak 追蹤**：團隊連續打卡天數計算
 - ✅ **使用者綁定**：Firebase Auth 與應用使用者綁定機制
 - ✅ **照片預覽**：點擊頭像查看完整訓練照片
+- ✅ **Timeline 時間軸**：以雙欄時間軸方式瀏覽所有訓練記錄
+- ✅ **Avatar 同步**：自動同步 Google 帳號頭像到使用者資料
 
 ### 技術特色
 
@@ -89,6 +93,7 @@ flowchart TB
    - 中半部：進度圓環和頭像（EnergyDashboard）
    - 下半部：Check-in 操作（ActionSection）
    - 彈窗：照片預覽（PhotoModal）
+   - 導航：選單下拉（MenuDropdown）→ Timeline / Race Guide / Logout
 
 ---
 
@@ -474,10 +479,11 @@ stateDiagram-v2
   - 最大寬度：90%
   - 最大高度：70vh
   - 保持照片原始比例（object-fit: contain）
-- 照片下方顯示：
+- 照片下方 Info Overlay 顯示：
+  - 使用者頭像（若有 avatarUrl 則顯示圖片，否則顯示縮寫）
   - 使用者姓名（font-weight: bold, font-size: 1.25rem）
-  - 訓練內容描述（note）
-  - 完成時間（格式：YYYY/MM/DD HH:mm）
+  - 完成時間（格式：YYYY/MM/DD HH:mm，帶 Clock icon）
+  - 訓練內容描述（note，若有則顯示 Quote 區塊）
 
 **3. 關閉按鈕**
 
@@ -679,6 +685,133 @@ flowchart TB
 
 ---
 
+### 8. Timeline 時間軸
+
+**Timeline** 是一個以雙欄時間軸方式呈現所有訓練記錄的頁面，讓團隊成員可以瀏覽完整的訓練歷史。
+
+#### 架構圖
+
+```mermaid
+flowchart TB
+    subgraph TimelinePage[Timeline 頁面]
+        direction TB
+        Header[Header<br/>返回按鈕 + 標題]
+        Legend[Team Legend<br/>左側/右側成員名稱]
+        Content[Timeline Content<br/>日期區塊列表]
+    end
+
+    subgraph DateSection[日期區塊]
+        direction LR
+        LeftCol[左欄<br/>Team A 記錄]
+        Spine[中央脊柱<br/>日期標記]
+        RightCol[右欄<br/>Team B 記錄]
+    end
+
+    Content --> DateSection
+    DateSection --> RecordCard[RecordCard<br/>單筆訓練卡片]
+    RecordCard -->|點擊圖片| PhotoModal[照片預覽 Modal]
+```
+
+#### 路由配置
+
+- **路徑**：`/timeline`
+- **組件**：`Timeline.vue`
+- **導航**：從 Dashboard 右上角 MenuDropdown 進入
+
+#### UI 規格
+
+**1. Header**
+
+- 左側返回按鈕（ArrowLeft icon）→ 返回 Dashboard
+- 品牌標題：`"HYROX TIMELINE"`
+- Sticky 定位，跟隨滾動
+
+**2. Team Legend**
+
+- 顯示左右兩側的團隊成員名稱
+- 格式：`"Dylan / Crystal"` vs `"Sylvi / Andrew"`
+- 位於 Header 下方
+
+**3. 日期區塊 (DateSection)**
+
+- 中央脊柱顯示日期標記（月份 + 日期 + 星期）
+- 日期標記使用 sticky 定位，滾動時固定在視窗中央
+- 左右兩欄顯示對應成員的訓練記錄
+- 使用 IntersectionObserver 實現滾動動畫
+  - 進入視窗時：opacity 1, 正常顏色
+  - 離開視窗時：opacity 0.4, grayscale 效果
+
+**4. 訓練卡片 (RecordCard)**
+
+- 顯示內容：
+  - Header：Avatar + 姓名 + 時間
+  - 訓練照片（4:3 比例）
+  - 訓練備註（若有）
+- 左側卡片右上角無圓角（`rounded-tr-none`）
+- 右側卡片左上角無圓角（`rounded-tl-none`）
+- 點擊照片開啟 PhotoModal
+- 連接線連接卡片到中央脊柱
+
+**5. 視覺設計**
+
+- 卡片最大寬度：10rem（mobile）/ 12rem（desktop）
+- 交錯排列：根據時間順序交錯顯示在左右欄
+- 使用 margin-top offset 創造視覺層次感
+
+#### 資料載入
+
+- 使用 `getAllWorkouts(squadId)` 取得所有訓練記錄
+- 資料按日期分組，日期降序排列（最新在上）
+- 每個日期內的記錄按完成時間降序排列
+
+---
+
+### 9. Avatar 同步機制
+
+**Avatar 同步**自動將 Google 帳號的頭像同步到應用使用者資料，讓團隊成員可以顯示個人化頭像。
+
+#### 同步時機
+
+1. **首次綁定時**：`createAuthBinding()` 會將 `photoURL` 寫入 `users/{userId}.avatarUrl`
+2. **每次登入時**：`useAuth` 會呼叫 `syncUserAvatar()` 更新頭像（若有變更）
+
+#### 流程圖
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant FirebaseAuth
+    participant useAuth
+    participant Firestore
+
+    User->>FirebaseAuth: Google 登入
+    FirebaseAuth-->>useAuth: 回傳 user (含 photoURL)
+
+    alt 首次綁定
+        useAuth->>Firestore: createAuthBinding(photoURL)
+        Firestore->>Firestore: 更新 users/{userId}.avatarUrl
+    else 已綁定
+        useAuth->>Firestore: syncUserAvatar(appUserId, photoURL)
+        Firestore->>Firestore: 更新 users/{userId}.avatarUrl
+    end
+```
+
+#### 資料更新
+
+- **Collection**：`users/{userId}`
+- **欄位**：`avatarUrl` (string)
+- **來源**：`FirebaseUser.photoURL`
+
+#### 顯示位置
+
+Avatar 會顯示在以下位置：
+
+1. **EnergyDashboard** - 團隊成員頭像（已完成者顯示照片）
+2. **PhotoModal** - 照片預覽的使用者資訊區
+3. **Timeline RecordCard** - 訓練記錄卡片的 Header
+
+---
+
 ## 技術堆疊
 
 | 類別     | 技術             | 版本   | 說明              |
@@ -701,12 +834,16 @@ flowchart TB
 │   ├── components/          # Vue 組件
 │   │   ├── RaceGuide/              # Race Guide 相關組件
 │   │   │   └── RaceTableRow.vue    # 工作站列表列
+│   │   ├── Timeline/               # Timeline 相關組件
+│   │   │   ├── DateSection.vue     # 日期區塊（含中央脊柱）
+│   │   │   └── RecordCard.vue      # 訓練記錄卡片
 │   │   ├── LoginView.vue           # 登入畫面
 │   │   ├── UserSelection.vue       # 使用者綁定選擇
 │   │   ├── HistoryHeatmap.vue      # Heatmap 和 Streak
 │   │   ├── EnergyDashboard.vue     # 進度圓環和頭像
 │   │   ├── ActionSection.vue       # Check-in 操作
-│   │   └── PhotoModal.vue          # 照片預覽 Modal
+│   │   ├── PhotoModal.vue          # 照片預覽 Modal
+│   │   └── MenuDropdown.vue        # 導航選單下拉
 │   ├── composables/         # Composition API
 │   │   ├── useAuth.ts              # 登入與綁定邏輯
 │   │   ├── useDashboard.ts         # Dashboard 資料載入
@@ -735,6 +872,12 @@ flowchart TB
 │   │   └── errorMessages.ts        # 錯誤訊息
 │   ├── config/
 │   │   └── firebase.ts             # Firebase 設定
+│   ├── views/               # 頁面組件
+│   │   ├── Dashboard.vue           # 主儀表板頁面
+│   │   ├── RaceGuide.vue           # Race Guide 頁面
+│   │   └── Timeline.vue            # Timeline 時間軸頁面
+│   ├── router/
+│   │   └── index.ts                # Vue Router 設定
 │   ├── styles/
 │   │   └── theme.css               # 主題樣式變數
 │   ├── assets/
