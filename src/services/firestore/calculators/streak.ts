@@ -62,12 +62,12 @@ export function calculateStreak(stats: UserDailyStats[]): number {
 
 /**
  * Calculate squad streak
- * Squad streak counts consecutive days where ALL members have checked in
+ * Squad streak counts consecutive days where AT LEAST ONE member has checked in
  *
  * Algorithm:
- * - Count backwards from today (or yesterday if not all members checked in today)
- * - For each day, verify ALL members have workout records
- * - Stop at first day where any member is missing
+ * - Count backwards from today (or yesterday if no member checked in today)
+ * - For each day, verify at least one member has workout record
+ * - Stop at first day where no member checked in
  *
  * @param memberStats - Map of userId to their daily stats array
  * @param memberIds - All member IDs in the squad
@@ -95,8 +95,8 @@ export function calculateSquadStreak(
     memberStatsLookup.set(memberId, statsMap);
   }
 
-  // Check if all members checked in today
-  const allCheckedInToday = memberIds.every((memberId) => {
+  // Check if any member checked in today
+  const anyCheckedInToday = memberIds.some((memberId) => {
     const statsMap = memberStatsLookup.get(memberId);
     return statsMap && statsMap.has(todayString);
   });
@@ -104,8 +104,8 @@ export function calculateSquadStreak(
   let squadStreak = 0;
   let checkDate = new Date(today);
 
-  // If not all members checked in today, start from yesterday (grace period)
-  if (!allCheckedInToday) {
+  // If no member checked in today, start from yesterday (grace period)
+  if (!anyCheckedInToday) {
     checkDate.setDate(checkDate.getDate() - 1);
   }
 
@@ -114,13 +114,13 @@ export function calculateSquadStreak(
     // Safety limit
     const checkDateString = toLocalDateString(checkDate);
 
-    // Check if ALL members have checked in on this date
-    const allCheckedIn = memberIds.every((memberId) => {
+    // Check if ANY member has checked in on this date
+    const anyCheckedIn = memberIds.some((memberId) => {
       const statsMap = memberStatsLookup.get(memberId);
       return statsMap && statsMap.has(checkDateString);
     });
 
-    if (allCheckedIn) {
+    if (anyCheckedIn) {
       squadStreak++;
       checkDate.setDate(checkDate.getDate() - 1);
     } else {
