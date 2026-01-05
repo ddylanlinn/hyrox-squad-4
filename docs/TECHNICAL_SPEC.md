@@ -8,16 +8,18 @@
 - [系統架構](#系統架構)
 - [資料模型](#資料模型)
 - [功能規格](#功能規格)
-- [Personal Streak (個人連續天數)](#personal-streak-個人連續天數)
-- [Race Guide (HYROX 比賽指南)](#race-guide-hyrox-比賽指南)
+  - [登入與身份綁定流程](#1-登入與身份綁定流程)
+  - [Check-in 流程](#2-check-in-流程下半部)
+  - [Dashboard 顯示](#3-dashboard-顯示中半部)
+  - [照片預覽 Modal](#4-照片預覽-modal)
+  - [Heatmap 熱力圖](#5-heatmap-熱力圖上半部)
+  - [Streak 連續天數](#6-streak-連續天數上半部)
+  - [Race Guide 比賽指南](#7-race-guide-比賽指南)
 - [技術堆疊](#技術堆疊)
 - [安全規則](#安全規則)
-- [常數設定](#常數設定)
 - [Firestore 嚴格規格與變更管理](#firestore-嚴格規格與變更管理)
 - [驗收標準](#驗收標準)
-- [關鍵決策記錄](#關鍵決策記錄)
-- [未來擴充方向](#未來擴充方向)
-- [附錄](#附錄)
+- [變更歷史](#變更歷史)
 
 ---
 
@@ -487,7 +489,7 @@ stateDiagram-v2
 
 ---
 
-### 5. Heatmap 和 Streak（上半部）
+### 5. Heatmap（上半部）
 
 #### 架構圖
 
@@ -505,50 +507,7 @@ flowchart TB
     end
 
     Countdown -->|天數| RaceDay[2026/02/28 - Today]
-    SquadStreak -->|計算| SquadLogic[所有已綁定成員完成]
-    PersonalStreak -->|計算| PersonalLogic[當前登入者連續天數]
     Grid -->|80 天| DisplayDays[從比賽前 79 天到比賽當天]
-```
-
-#### 頂部佈局規格
-
-**1. Race Countdown (左側)**
-
-- 標題：`"RACE COUNTDOWN"`
-- 內容：顯示距離比賽還剩多少天（天數 + `Days` 單位）。
-- 底部文字：`"Until HYROX 2026/02/28"`。
-
-**2. Squad Streak (中間)**
-
-- 標題：`"SQUAD STREAK"`
-- 圖示：火焰圖示 (Flame)。
-- 內容：顯示整隊連續打卡天數。當所有已綁定使用者完成打卡則 +1。
-- 視覺：置中對齊。
-
-**3. Personal Streak (右側)**
-
-- 標題：`"PERSONAL STREAK"`
-- 圖示：火焰圖示 (Flame)。
-- 內容：顯示當前登入使用者的連續打卡天數。
-- 視覺：靠右對齊。
-
-#### Streak 計算規格
-
-**1. Squad Streak 計算邏輯**（關鍵：只計算已綁定的使用者）
-
-```
-規則：
-- 如果「所有已綁定登入的使用者」在當天都完成打卡 → streak +1
-- 如果任何一位已綁定使用者未完成 → streak 歸零（明天若完成則重新計為 1）
-```
-
-**2. Personal Streak 計算邏輯**
-
-```
-規則：
-- 僅計算「當前登入使用者」的連續打卡天數。
-- 如果當天已完成打卡 → streak 為包含今天的連續天數。
-- 如果當天未完成，但昨天有完成 → streak 展示昨天的值（直到換日）。
 ```
 
 #### 比賽倒數計時規格
@@ -577,46 +536,6 @@ flowchart TB
 - 下方顯示：`"Until HYROX 2026/02/28"`
   - Font-size: 0.75rem (12px)
   - 三級灰色（--color-text-tertiary）
-
-#### Streak 計算規格
-
-**1. 計算邏輯**（關鍵：只計算已綁定的使用者）
-
-```
-規則：
-- 如果「所有已綁定登入的使用者」在當天都完成打卡 → streak +1
-- 如果任何一位已綁定使用者未完成 → streak 歸零（明天若完成則重新計為 1）
-
-範例（假設 4 人中只有 3 人已綁定）：
-- 昨天：3 人都未完成 → streak = 0
-- 今天：3 人都完成 → streak = 1
-- 明天：只有 2 人完成 → streak = 0
-- 後天：3 人都完成 → streak = 1
-
-範例（假設 4 人都已綁定）：
-- 昨天：4 人都完成 → streak = 1
-- 今天：4 人都完成 → streak = 2
-- 明天：只有 3 人完成 → streak = 0
-- 後天：4 人都完成 → streak = 1
-```
-
-**2. 視覺設計**
-
-- 標題：`"CURRENT STREAK"`
-  - 大寫、粗體、灰色
-  - Font-size: 0.75rem (12px)
-- 火焰圖示（Flame icon）：
-  - streak > 0 → 橘紅色填充（`--color-streak-active`）
-  - streak = 0 → 灰色無填充（`--color-streak-inactive`）
-  - 尺寸：20px
-- 數字：48px、超粗體、主色
-- 單位：`"Days"`（16px、中等粗細、次要色）
-- **即時更新機制**：
-  - 使用 Firestore `onSnapshot` 監聽 `workouts` collection 變化
-  - 當 `todaysRecords` 有新增 record 時，觸發 streak 重算
-  - 重算邏輯從 Firestore `users/{userId}/stats/{date}` 取得資料
-  - 使用 `calculateStreak()` 和 `calculateSquadStreak()` 正確計算
-  - Squad Streak 只計算**已綁定 (bound) 的成員**，而非全部成員
 
 #### Heatmap 格線規格
 
@@ -656,11 +575,82 @@ flowchart TB
 
 ---
 
-## Race Guide (HYROX 比賽指南)
+### 6. Streak 連續天數（上半部）
+
+#### Squad Streak 計算規格
+
+**計算邏輯**（關鍵：只計算已綁定的使用者）
+
+```
+規則：
+- 如果「所有已綁定登入的使用者」在當天都完成打卡 → streak +1
+- 如果任何一位已綁定使用者未完成 → streak 歸零（明天若完成則重新計為 1）
+
+範例（假設 4 人中只有 3 人已綁定）：
+- 昨天：3 人都未完成 → streak = 0
+- 今天：3 人都完成 → streak = 1
+- 明天：只有 2 人完成 → streak = 0
+- 後天：3 人都完成 → streak = 1
+
+範例（假設 4 人都已綁定）：
+- 昨天：4 人都完成 → streak = 1
+- 今天：4 人都完成 → streak = 2
+- 明天：只有 3 人完成 → streak = 0
+- 後天：4 人都完成 → streak = 1
+```
+
+**UI 規格**
+
+- 標題：`"SQUAD STREAK"`
+- 圖示：火焰圖示 (Flame)
+- 內容：顯示整隊連續打卡天數
+- 視覺：置中對齊
+
+#### Personal Streak 計算規格
+
+**計算邏輯**
+
+```
+規則：
+- 僅計算「當前登入使用者」的連續打卡天數。
+- 如果當天已完成打卡 → streak 為包含今天的連續天數。
+- 如果當天未完成，但昨天有完成 → streak 展示昨天的值（直到換日）。
+```
+
+**UI 規格**
+
+- 標題：`"PERSONAL STREAK"`
+- 圖示：火焰圖示 (Flame)
+- 內容：顯示當前登入使用者的連續打卡天數
+- 視覺：靠右對齊
+
+#### 視覺設計（共用）
+
+- 標題：`"CURRENT STREAK"`
+  - 大寫、粗體、灰色
+  - Font-size: 0.75rem (12px)
+- 火焰圖示（Flame icon）：
+  - streak > 0 → 橘紅色填充（`--color-streak-active`）
+  - streak = 0 → 灰色無填充（`--color-streak-inactive`）
+  - 尺寸：20px
+- 數字：48px、超粗體、主色
+- 單位：`"Days"`（16px、中等粗細、次要色）
+
+#### 即時更新機制
+
+- 使用 Firestore `onSnapshot` 監聽 `workouts` collection 變化
+- 當 `todaysRecords` 有新增 record 時，觸發 streak 重算
+- 重算邏輯從 Firestore `users/{userId}/stats/{date}` 取得資料
+- 使用 `calculateStreak()` 和 `calculateSquadStreak()` 正確計算
+- Squad Streak 只計算**已綁定 (bound) 的成員**，而非全部成員
+
+---
+
+### 7. Race Guide 比賽指南
 
 **Race Guide** 是一個動態的參賽指南，根據使用者選擇的比賽組別（Category）即時顯示對應的重量與項目標準。
 
-### 介面設計 (UI/UX)
+#### 介面設計 (UI/UX)
 
 1. **視覺風格**：
 
@@ -675,7 +665,7 @@ flowchart TB
    - **自適應顯示**：若該項目不需要顯示重量（如空字串），UI 會自動隱藏重量欄位。
    - **雙行標題**：標題顯示英文官方名稱，副標題顯示中文譯名。
 
-### 資料結構
+#### 資料結構
 
 為了保持簡約與易於維護，資料被拆分為三個層次：
 
@@ -850,12 +840,6 @@ flowchart TB
 
 ---
 
-## 常數設定
-
-以下常數定義於 `src/constants/index.ts`：
-
----
-
 ## Firestore 嚴格規格與變更管理
 
 ### 設計原則
@@ -934,6 +918,8 @@ docs/
 
 ---
 
+## 驗收標準
+
 ### 資料一致性
 
 - [ ] Check-in 後 `users/{userId}/stats/{date}` 正確更新
@@ -951,18 +937,3 @@ docs/
 - [ ] 使用者只能更新自己的資料
 
 ---
-
-**變更歷史**：
-
-- 2025-12-23：初始版本，包含完整系統規格和 Firestore 嚴格規範
-- 2025-12-25：UI 優化與 Streak 更新邏輯調整
-- 2025-12-29：新增 Race Guide 功能與 UI 重構
-  - 實作 10 種參賽組別的動態重量切換
-  - 重構資料結構，將資料 (Constants) 與邏輯 (Utils) 分離
-  - UI 全面升級：Slate 漸層色、雙行標題 (英中)、極簡 RUN 區塊
-  - 優化 100 Reps 排版與重量欄位顯眼度
-- 2025-12-29：修復 Streak 即時更新問題
-  - 新增 `watch(todaysRecords, ...)` hook 監聯打卡記錄變化
-  - 修復樂觀更新 `+1` 邏輯錯誤，改為從 Firestore 重新計算
-  - 修復 Squad Streak 使用全部成員而非 bound members 的問題
-  - 新增 `boundMemberIds` state 快取已綁定成員
