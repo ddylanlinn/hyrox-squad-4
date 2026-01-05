@@ -7,23 +7,16 @@
           <router-link to="/" class="back-btn" title="Back to Dashboard">
             <ArrowLeft :size="20" />
           </router-link>
-          <div class="brand">
-            <div class="brand-icon">
-              <Activity :size="20" />
-            </div>
-            <h1 class="brand-title">
-              HYROX <span class="accent">TIMELINE</span>
-            </h1>
-          </div>
+          <h1 class="header-title">TIMELINE</h1>
         </div>
       </div>
     </header>
 
     <!-- Team Legend -->
-    <div class="team-legend">
+    <!-- <div class="team-legend">
       <span>{{ leftTeamLabel }}</span>
       <span>{{ rightTeamLabel }}</span>
-    </div>
+    </div> -->
 
     <!-- Loading State -->
     <div v-if="loading" class="loading-container">
@@ -73,7 +66,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { Activity, ArrowLeft } from "lucide-vue-next";
+import { ArrowLeft } from "lucide-vue-next";
 import { useAuth } from "../composables/useAuth";
 import { getAllWorkouts, getSquadMembers } from "../services/firestore";
 import { convertSquadMembersToUsers } from "../utils/dataConverters";
@@ -244,29 +237,12 @@ watch(
   color: var(--color-text-primary);
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.brand-icon {
-  background: var(--color-primary-400);
-  padding: 0.375rem;
-  border-radius: 0.5rem;
-  color: #000;
-}
-
-.brand-title {
+.header-title {
   font-family: "Oswald", sans-serif;
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   color: var(--color-text-primary);
-}
-
-.brand-title .accent {
-  color: var(--color-primary-600);
 }
 
 /* Team Legend */

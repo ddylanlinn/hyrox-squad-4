@@ -84,7 +84,9 @@ const isActive = ref(false);
 // Sort all records by time (latest first - closer to now at top)
 const sortedRecordsWithIndex = computed(() => {
   const sorted = [...props.records].sort((a, b) => {
-    return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime();
+    return (
+      new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
+    );
   });
   return sorted.map((record, index) => ({ record, globalIndex: index }));
 });
@@ -317,7 +319,6 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: 1fr 3rem 1fr;
   padding: 1rem 0.25rem 0; /* Less outer padding */
-  overflow: hidden;
 }
 
 @media (min-width: 640px) {
@@ -331,7 +332,6 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   min-width: 0; /* Prevent grid blowout */
-  overflow: hidden;
 }
 
 .column-left {

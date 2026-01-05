@@ -2,31 +2,14 @@
   <div
     class="min-h-screen bg-gray-50 text-zinc-900 font-sans selection:bg-yellow-400 selection:text-black"
   >
-    <!-- Sticky Glass Header - Light Mode -->
-    <header
-      class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-200 shadow-sm max-w-[28rem] mx-auto"
-    >
-      <div class="flex justify-between items-center px-5 py-4">
-        <div class="flex items-center gap-3">
-          <router-link
-            to="/"
-            class="flex items-center justify-start w-8 h-8 rounded-full text-zinc-600 hover:bg-zinc-200 hover:text-black transition-colors"
-          >
-            <ArrowLeft :size="18" />
+    <!-- Header -->
+    <header class="race-guide-header">
+      <div class="header-content">
+        <div class="header-left">
+          <router-link to="/" class="back-btn" title="Back to Dashboard">
+            <ArrowLeft :size="20" />
           </router-link>
-          <div class="flex flex-col leading-none">
-            <div class="flex items-center space-x-1 mb-1">
-              <span
-                class="text-[10px] font-bold text-zinc-900 tracking-[0.3em] uppercase"
-                >Race Guide</span
-              >
-            </div>
-            <h1
-              class="text-3xl font-black text-black italic tracking-tighter brand-font"
-            >
-              HYROX
-            </h1>
-          </div>
+          <h1 class="header-title">RACE GUIDE</h1>
         </div>
         <div class="relative">
           <button
@@ -86,7 +69,7 @@
     </header>
 
     <!-- Spacer for fixed header -->
-    <div class="h-20"></div>
+    <div class="h-16"></div>
 
     <!-- Main Content - The "Power List" -->
     <main class="px-0">
@@ -136,7 +119,53 @@ const getWeightForStation = (stationId: string): string | undefined => {
 </script>
 
 <style scoped>
-.brand-font {
+/* Header */
+.race-guide-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: var(--color-background);
+  border-bottom: 1px solid var(--color-border);
+  max-width: 28rem;
+  margin: 0 auto;
+}
+
+.header-content {
+  padding: 0 1rem;
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  color: var(--color-text-secondary);
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  background: var(--color-neutral-100);
+  color: var(--color-text-primary);
+}
+
+.header-title {
   font-family: "Oswald", sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--color-text-primary);
 }
 </style>

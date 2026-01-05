@@ -1,7 +1,9 @@
 <template>
   <div
     class="record-card"
-    :class="[alignment === 'left' ? 'items-end text-right' : 'items-start text-left']"
+    :class="[
+      alignment === 'left' ? 'items-end text-right' : 'items-start text-left',
+    ]"
   >
     <!-- Header: Avatar, Name & Time -->
     <div
@@ -182,20 +184,32 @@ const formattedTime = computed(() => {
 .connector-line {
   position: absolute;
   top: 1rem;
-  width: 1rem;
+  width: 1.5rem;
   height: 1px;
   background: var(--color-border);
 }
 
 .right-connector {
-  right: -1.25rem;
+  right: -1.75rem;
 }
 
 .left-connector {
-  left: -1.25rem;
+  left: -1.75rem;
 }
 
 @media (min-width: 640px) {
+  .connector-line {
+    width: 2rem;
+  }
+
+  .right-connector {
+    right: -2.5rem;
+  }
+
+  .left-connector {
+    left: -2.5rem;
+  }
+
   .card-content {
     width: 12rem;
   }
