@@ -9,7 +9,7 @@
 
         <div class="w-full h-full flex flex-col relative">
           <!-- Image Container -->
-          <div class="flex-1 flex items-center justify-center p-4">
+          <div class="flex-1 min-h-0 flex items-center justify-center p-4 overflow-hidden">
             <img
               :src="record.imageUrl"
               alt="Workout Proof"
@@ -80,6 +80,8 @@ const formatTime = (dateString: string) => {
   justify-content: center;
   background-color: var(--color-modal-overlay);
   backdrop-filter: blur(12px);
+  height: 100vh; /* fallback */
+  height: 100dvh; /* dynamic viewport height for mobile */
 }
 
 /* ========== Close Button ========== */
