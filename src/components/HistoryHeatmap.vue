@@ -39,12 +39,20 @@
       </div>
 
       <!-- Squad Streak (Middle) -->
-      <div class="flex-1 flex flex-col items-center min-w-0 px-2">
-        <h2
-          class="text-secondary text-[10px] font-bold uppercase tracking-widest mb-1 whitespace-nowrap"
-        >
-          Streak
-        </h2>
+      <div class="flex-1 flex flex-col items-center min-w-0 px-2 relative">
+        <div class="flex items-center gap-1 mb-1">
+          <h2
+            class="text-secondary text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
+          >
+            Streak
+          </h2>
+          <button
+            @click="showStreakTooltip = !showStreakTooltip"
+            class="text-tertiary hover:text-secondary transition-colors"
+          >
+            <Info :size="12" />
+          </button>
+        </div>
         <div
           class="flex items-baseline gap-1.5 px-3 py-1 rounded-full transition-all duration-500"
         >
@@ -58,15 +66,34 @@
           >
           <span class="text-secondary font-medium text-xs">Days</span>
         </div>
+
+        <!-- Streak Tooltip -->
+        <div
+          v-if="showStreakTooltip"
+          v-click-away="() => (showStreakTooltip = false)"
+          class="absolute top-6 left-1/2 -translate-x-1/2 z-20 bg-white border border-border rounded-md shadow-lg p-2 whitespace-nowrap animate-in fade-in zoom-in duration-200"
+        >
+          <p class="text-[10px] font-bold text-primary">
+            Days in a row the squad trained
+          </p>
+        </div>
       </div>
 
       <!-- Personal Streak (Right) -->
-      <div class="flex-1 flex flex-col items-end min-w-0">
-        <h2
-          class="text-secondary text-[10px] font-bold uppercase tracking-widest mb-1 whitespace-nowrap"
-        >
-          P. Streak
-        </h2>
+      <div class="flex-1 flex flex-col items-end min-w-0 relative">
+        <div class="flex items-center gap-1 mb-1">
+          <h2
+            class="text-secondary text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
+          >
+            P. Streak
+          </h2>
+          <button
+            @click="showPersonalStreakTooltip = !showPersonalStreakTooltip"
+            class="text-tertiary hover:text-secondary transition-colors"
+          >
+            <Info :size="12" />
+          </button>
+        </div>
         <div class="flex items-baseline gap-1">
           <Flame
             :size="16"
@@ -77,6 +104,17 @@
             >{{ personalStreak }}</span
           >
           <span class="text-secondary font-medium text-xs">Days</span>
+        </div>
+
+        <!-- Personal Streak Tooltip -->
+        <div
+          v-if="showPersonalStreakTooltip"
+          v-click-away="() => (showPersonalStreakTooltip = false)"
+          class="absolute top-6 right-0 z-20 bg-white border border-border rounded-md shadow-lg p-2 whitespace-nowrap animate-in fade-in zoom-in duration-200"
+        >
+          <p class="text-[10px] font-bold text-primary">
+            Your daily check-in streak
+          </p>
         </div>
       </div>
     </div>
@@ -122,6 +160,8 @@ interface Props {
 const props = defineProps<Props>();
 
 const showTooltip = ref(false);
+const showStreakTooltip = ref(false);
+const showPersonalStreakTooltip = ref(false);
 
 // Calculate days until race
 const daysUntilRace = computed(() => {
