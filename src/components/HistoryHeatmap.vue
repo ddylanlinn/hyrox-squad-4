@@ -121,7 +121,7 @@
 
     <!-- Grid: 80 days countdown to race day (D-79 to D-0) -->
     <div class="w-full">
-      <div class="grid grid-cols-16 gap-0.5 w-full">
+      <div class="grid grid-cols-15 gap-0.5 w-full">
         <div
           v-for="(day, index) in displayHistory"
           :key="day.date"

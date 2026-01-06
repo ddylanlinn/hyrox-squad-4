@@ -40,7 +40,7 @@ export const COMPETITION_DATE = "2026-02-28";
 /**
  * Number of days to display in history heatmap
  */
-export const HEATMAP_DAYS_COUNT = 64;
+export const HEATMAP_DAYS_COUNT = 60;
 
 // ========== Authentication ==========
 
