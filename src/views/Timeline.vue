@@ -192,8 +192,8 @@ watch(
   height: 100dvh;
   overflow-x: hidden;
   overflow-y: auto;
-  background: var(--color-neutral-50);
-  color: var(--color-text-primary);
+  background: #18181b;
+  color: #ffffff;
   padding-bottom: 8rem;
 }
 
@@ -202,8 +202,8 @@ watch(
   position: sticky;
   top: 0;
   z-index: 50;
-  background: var(--color-background);
-  border-bottom: 1px solid var(--color-border);
+  background: #18181b;
+  border-bottom: 1px solid #3f3f46;
 }
 
 .header-content {
@@ -228,13 +228,13 @@ watch(
   justify-content: center;
   padding: 0.5rem;
   border-radius: 0.5rem;
-  color: var(--color-text-secondary);
+  color: #a1a1aa;
   transition: all 0.2s;
 }
 
 .back-btn:hover {
-  background: var(--color-neutral-100);
-  color: var(--color-text-primary);
+  background: #27272a;
+  color: #ffffff;
 }
 
 .header-title {
@@ -242,7 +242,7 @@ watch(
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: 0.05em;
-  color: var(--color-text-primary);
+  color: #ffffff;
 }
 
 /* Team Legend */
@@ -257,7 +257,7 @@ watch(
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--color-text-tertiary);
+  color: #71717a;
 }
 
 /* Timeline Content */
@@ -286,8 +286,8 @@ watch(
 .loading-spinner {
   width: 48px;
   height: 48px;
-  border: 4px solid var(--color-border);
-  border-top-color: var(--color-primary);
+  border: 4px solid #3f3f46;
+  border-top-color: #84cc16;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -299,7 +299,7 @@ watch(
 }
 
 .loading-container p {
-  color: var(--color-text-secondary);
+  color: #a1a1aa;
   font-size: 0.875rem;
 }
 
@@ -316,14 +316,14 @@ watch(
 }
 
 .error-container p {
-  color: var(--color-error, #ef4444);
+  color: #ef4444;
   font-size: 0.875rem;
 }
 
 .error-container button {
   padding: 0.5rem 1.5rem;
-  background-color: var(--color-primary);
-  color: white;
+  background-color: #84cc16;
+  color: #000000;
   border: none;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -343,7 +343,7 @@ watch(
   align-items: center;
   justify-content: center;
   min-height: 200px;
-  color: var(--color-text-tertiary);
+  color: #71717a;
 }
 
 /* End of Feed */
@@ -360,12 +360,12 @@ watch(
 .end-line {
   width: 2px;
   height: 3rem;
-  background: linear-gradient(to bottom, var(--color-border), transparent);
+  background: linear-gradient(to bottom, #3f3f46, transparent);
 }
 
 .end-text {
   font-family: monospace;
   font-size: 0.75rem;
-  color: var(--color-text-tertiary);
+  color: #71717a;
 }
 </style>

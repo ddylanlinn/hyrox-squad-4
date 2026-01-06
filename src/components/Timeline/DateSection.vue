@@ -220,7 +220,7 @@ onUnmounted(() => {
   top: 0;
   bottom: 0;
   width: 2px;
-  background: var(--color-border);
+  background: #3f3f46;
   z-index: 0;
 }
 
@@ -244,16 +244,16 @@ onUnmounted(() => {
   width: 3rem;
   height: 3rem;
   border-radius: 0.75rem;
-  border: 3px solid var(--color-border);
-  background: var(--color-background);
-  box-shadow: var(--shadow-lg);
+  border: 3px solid #3f3f46;
+  background: #18181b;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3);
   transition: all 0.5s;
 }
 
 .date-marker.active {
-  border-color: var(--color-primary-400);
+  border-color: #a3e635;
   transform: scale(1.1);
-  box-shadow: var(--shadow-glow-primary);
+  box-shadow: 0 0 20px rgba(163, 230, 53, 0.4);
 }
 
 @media (min-width: 640px) {
@@ -266,7 +266,7 @@ onUnmounted(() => {
 .month {
   font-size: 0.6rem;
   font-weight: 700;
-  color: var(--color-text-tertiary);
+  color: #71717a;
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
@@ -282,12 +282,12 @@ onUnmounted(() => {
   font-size: 1.125rem;
   font-weight: 700;
   line-height: 1;
-  color: var(--color-text-tertiary);
+  color: #71717a;
   transition: color 0.5s;
 }
 
 .day.active {
-  color: var(--color-text-primary);
+  color: #ffffff;
 }
 
 @media (min-width: 640px) {
@@ -304,14 +304,14 @@ onUnmounted(() => {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  background: var(--color-neutral-100);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-tertiary);
+  background: #27272a;
+  border: 1px solid #3f3f46;
+  color: #71717a;
   transition: color 0.5s;
 }
 
 .weekday.active {
-  color: var(--color-primary-600);
+  color: #65a30d;
 }
 
 /* Two Column Layout */

@@ -102,9 +102,9 @@ const formattedTime = computed(() => {
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  border: 2px solid var(--color-border);
+  border: 2px solid #3f3f46;
   overflow: hidden;
-  background: var(--color-neutral-200);
+  background: #27272a;
 }
 
 .avatar-img {
@@ -121,7 +121,7 @@ const formattedTime = computed(() => {
   justify-content: center;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-text-secondary);
+  color: #a1a1aa;
 }
 
 .user-name {
@@ -130,13 +130,13 @@ const formattedTime = computed(() => {
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-text-secondary);
+  color: #a1a1aa;
 }
 
 .time-text {
   font-family: monospace;
   font-size: 0.75rem;
-  color: var(--color-text-tertiary);
+  color: #71717a;
 }
 
 .card-content {
@@ -144,11 +144,11 @@ const formattedTime = computed(() => {
   width: 100%;
   max-width: 10rem;
   min-width: 8rem;
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
+  background: #27272a;
+  border: 1px solid #3f3f46;
   border-radius: 1rem;
   overflow: hidden;
-  box-shadow: var(--shadow-card);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s;
 }
 
@@ -160,7 +160,7 @@ const formattedTime = computed(() => {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
-  background: var(--color-neutral-100);
+  background: #3f3f46;
   cursor: pointer;
 }
 
@@ -176,9 +176,11 @@ const formattedTime = computed(() => {
 
 .note {
   font-size: 0.875rem;
-  color: var(--color-text-primary);
-  line-height: 1.5;
+  color: #ffffff;
+  line-height: 1.4;
   white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .connector-line {
@@ -186,7 +188,7 @@ const formattedTime = computed(() => {
   top: 1rem;
   width: 1.5rem;
   height: 1px;
-  background: var(--color-border);
+  background: #3f3f46;
 }
 
 .right-connector {

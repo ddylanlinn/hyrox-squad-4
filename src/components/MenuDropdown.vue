@@ -58,7 +58,8 @@ onMounted(() => {
   };
 
   document.addEventListener("click", handleClickOutside);
-  cleanupClickOutside = () => document.removeEventListener("click", handleClickOutside);
+  cleanupClickOutside = () =>
+    document.removeEventListener("click", handleClickOutside);
 });
 
 onUnmounted(() => {
@@ -96,9 +97,7 @@ onUnmounted(() => {
   min-width: 160px;
   background: white;
   border-radius: 0.75rem;
-  box-shadow:
-    0 4px 6px -1px rgb(0 0 0 / 0.1),
-    0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   border: 1px solid var(--color-border);
   overflow: hidden;
   z-index: 50;
