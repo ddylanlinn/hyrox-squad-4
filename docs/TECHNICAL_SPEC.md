@@ -843,10 +843,11 @@ Avatar 會顯示在以下位置：
 │   │   ├── EnergyDashboard.vue     # 進度圓環和頭像
 │   │   ├── ActionSection.vue       # Check-in 操作
 │   │   ├── PhotoModal.vue          # 照片預覽 Modal
-│   │   └── MenuDropdown.vue        # 導航選單下拉
+│   │   ├── MenuDropdown.vue        # 導航選單下拉
+│   │   └── LoadingBar.vue          # 頂部非阻塞式載入提示條
 │   ├── composables/         # Composition API
 │   │   ├── useAuth.ts              # 登入與綁定邏輯
-│   │   ├── useDashboard.ts         # Dashboard 資料載入
+│   │   ├── useDashboard.ts         # Dashboard 資料載入（含 reloading state）
 │   │   └── useWorkout.ts           # Check-in 邏輯
 │   ├── utils/              # 通用工具
 │   │   └── raceUtils.ts            # Race Guide 邏輯工具
@@ -1073,5 +1074,34 @@ docs/
 - [ ] 使用者只能建立自己的 workout
 - [ ] 使用者只能上傳照片到自己的目錄
 - [ ] 使用者只能更新自己的資料
+
+---
+
+## 變更歷史
+
+### 2026-01-20 - 載入體驗優化
+
+**變更原因**：改善載入狀態的使用者體驗，避免全畫面阻塞
+
+**改動內容**：
+- **新增組件** `LoadingBar.vue`
+  - 頂部固定位置的非阻塞式載入提示條
+  - 品牌綠漸層設計（`#f0fdf4` → `#dcfce7`）
+  - 限制寬度 `max-width: 28rem` 與 app 容器對齊
+  - 進入動畫 0.3s，離開動畫 0.8s（更優雅）
+
+- **修改 composable** `useDashboard.ts`
+  - 新增 `reloading` ref 區分首次載入和重新載入
+  - `loadDashboardData(isReload)` 新增參數控制 loading 類型
+  - 當偵測到新 workout record 時觸發 `reloading = true`
+
+- **修改頁面** `Dashboard.vue`
+  - 移除全畫面 loading spinner
+  - 首次載入和重新載入皆使用頂部 `LoadingBar`
+  - 載入期間內容保持可見
+
+**影響範圍**：
+- UI 層：Dashboard 載入行為
+- 不影響資料邏輯或 Firestore schema
 
 ---

@@ -33,7 +33,8 @@ interface UseDashboardOptions {
  */
 export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
   // State
-  const loading = ref(true);
+  const loading = ref(true); // Initial full-screen loading
+  const reloading = ref(false); // Subsequent reload (top bar only)
   const error = ref<string | null>(null);
   const history = ref<DailyStats[]>([]); // Now uses TEAM history (count = 0-4)
   const todaysRecords = ref<WorkoutRecord[]>([]);
@@ -44,7 +45,7 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
   const boundMemberIds = ref<string[]>([]); // Cached bound member IDs for streak calculation
 
   // Flag to prevent duplicate reloads during realtime updates
-  let isReloading = false;
+  let isReloadingInternal = false;
 
   // Firestore realtime listener unsubscribe functions
   let unsubscribeWorkouts: (() => void) | null = null;
@@ -53,15 +54,20 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
 
   /**
    * Load dashboard data from Firestore
+   * @param isReload - If true, use top loading bar instead of full-screen
    */
-  async function loadDashboardData() {
+  async function loadDashboardData(isReload = false) {
     if (!appUserId.value) {
       console.warn("App user not bound, cannot load data");
       return;
     }
 
     try {
-      loading.value = true;
+      if (isReload) {
+        reloading.value = true;
+      } else {
+        loading.value = true;
+      }
       error.value = null;
 
       const data = await getDashboardData(appUserId.value, squadId);
@@ -112,6 +118,7 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
       error.value = "Failed to load data, please refresh the page";
     } finally {
       loading.value = false;
+      reloading.value = false;
     }
   }
 
@@ -236,7 +243,7 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
     todaysRecords,
     async (newRecords, oldRecords) => {
       // Skip if no user bound or during initial load or already reloading
-      if (!appUserId.value || loading.value || isReloading) return;
+      if (!appUserId.value || loading.value || isReloadingInternal) return;
 
       // Check if there's a meaningful change (new records added)
       const hasNewRecords = newRecords.length > (oldRecords?.length || 0);
@@ -246,7 +253,8 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
 
       // Reload to get correct streak calculation
       // This ensures we use the proper calculateStreak logic rather than optimistic +1
-      isReloading = true;
+      isReloadingInternal = true;
+      reloading.value = true;
       try {
         // Only reload streak-related data, not full dashboard
         const data = await getDashboardData(appUserId.value, squadId);
@@ -266,7 +274,8 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
           console.log("Squad streak recalculated:", streak.value);
         }
       } finally {
-        isReloading = false;
+        isReloadingInternal = false;
+        reloading.value = false;
       }
     },
     { deep: true }
@@ -358,6 +367,7 @@ export function useDashboard({ appUserId, squadId }: UseDashboardOptions) {
   return {
     // State
     loading,
+    reloading,
     error,
     history,
     todaysRecords,

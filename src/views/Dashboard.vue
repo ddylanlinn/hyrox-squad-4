@@ -1,18 +1,15 @@
 <template>
   <div class="dashboard-content">
-    <!-- Loading State -->
-    <div v-if="loading" class="loading-container">
-      <div class="loading-spinner"></div>
-      <p>Loading...</p>
-    </div>
+    <!-- Top Loading Bar (for all loading states) -->
+    <LoadingBar :visible="loading || reloading" text="Loading..." />
 
     <!-- Error State -->
-    <div v-else-if="error" class="error-container">
+    <div v-if="error" class="error-container">
       <p>{{ error }}</p>
       <button @click="loadDashboardData">retry</button>
     </div>
 
-    <!-- Main Content -->
+    <!-- Main Content (always visible) -->
     <template v-else>
       <!-- User Info Bar -->
       <div class="user-info-bar">
@@ -82,6 +79,7 @@ import EnergyDashboard from "../components/EnergyDashboard.vue";
 import ActionSection from "../components/ActionSection.vue";
 import PhotoModal from "../components/PhotoModal.vue";
 import MenuDropdown from "../components/MenuDropdown.vue";
+import LoadingBar from "../components/LoadingBar.vue";
 import type { WorkoutRecord } from "../types";
 
 // Auth
@@ -90,6 +88,7 @@ const { user, appUserId, signOut } = useAuth();
 // Dashboard
 const {
   loading,
+  reloading,
   error,
   history,
   todaysRecords,
