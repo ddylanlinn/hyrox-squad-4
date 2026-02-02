@@ -40,12 +40,57 @@
               </div>
             </div>
 
-            <div v-if="record.note" class="modal-quote">
-              <div class="modal-quote-content">
-                <Quote :size="16" class="modal-quote-icon" />
-                <p class="modal-quote-text">"{{ record.note }}"</p>
+            <!-- Edit Form -->
+            <div v-if="isEditing" class="modal-edit-form">
+              <input
+                ref="editFileInputRef"
+                type="file"
+                accept="image/*"
+                class="hidden"
+                @change="handleImageSelect"
+              />
+              <textarea
+                v-model="editedNote"
+                placeholder="Update note..."
+                class="edit-textarea"
+              ></textarea>
+              <div class="edit-actions">
+                <button @click="selectNewImage" class="edit-action-button secondary">
+                  Change Photo
+                </button>
+                <div class="edit-primary-actions">
+                  <button @click="cancelEdit" class="edit-action-button secondary">
+                    Cancel
+                  </button>
+                  <button @click="saveEdit" class="edit-action-button primary">
+                    Save
+                  </button>
+                </div>
               </div>
+              <p v-if="newImageFile" class="new-image-indicator">
+                New image selected: {{ newImageFile.name }}
+              </p>
             </div>
+
+            <!-- Normal View -->
+            <template v-else>
+              <div v-if="record.note" class="modal-quote">
+                <div class="modal-quote-content">
+                  <Quote :size="16" class="modal-quote-icon" />
+                  <p class="modal-quote-text">"{{ record.note }}"</p>
+                </div>
+              </div>
+
+              <!-- Edit/Delete Actions -->
+              <div v-if="canEdit" class="modal-actions">
+                <button @click="startEdit" class="action-button edit-button">
+                  <Edit :size="20" /> Edit
+                </button>
+                <button @click="handleDelete" class="action-button delete-button">
+                  <Trash :size="20" /> Delete
+                </button>
+              </div>
+            </template>
           </div>
         </div>
       </div>
@@ -54,20 +99,41 @@
 </template>
 
 <script setup lang="ts">
-import { X, Clock, Quote } from "lucide-vue-next";
+import { ref, computed } from "vue";
+import { X, Clock, Quote, Edit, Trash } from "lucide-vue-next";
 import type { User, WorkoutRecord } from "../types";
 
 interface Props {
   isOpen: boolean;
   record: WorkoutRecord | null;
   user: User | undefined;
+  workoutId?: string;
+  currentUserId?: string;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
   close: [];
+  edit: [
+    data: { workoutId: string; note?: string; file?: File; oldImageUrl: string }
+  ];
+  delete: [workoutId: string];
 }>();
+
+const isEditing = ref(false);
+const editedNote = ref("");
+const editFileInputRef = ref<HTMLInputElement | null>(null);
+const newImageFile = ref<File | null>(null);
+
+const canEdit = computed(() => {
+  return (
+    props.record &&
+    props.currentUserId &&
+    props.workoutId &&
+    props.record.userId === props.currentUserId
+  );
+});
 
 const formatTime = (dateString: string) => {
   return new Date(dateString).toLocaleTimeString("en-US", {
@@ -75,6 +141,56 @@ const formatTime = (dateString: string) => {
     minute: "2-digit",
     hour12: false,
   });
+};
+
+const startEdit = () => {
+  if (!props.record) return;
+  editedNote.value = props.record.note || "";
+  newImageFile.value = null;
+  isEditing.value = true;
+};
+
+const cancelEdit = () => {
+  isEditing.value = false;
+  editedNote.value = "";
+  newImageFile.value = null;
+  if (editFileInputRef.value) {
+    editFileInputRef.value.value = "";
+  }
+};
+
+const selectNewImage = () => {
+  editFileInputRef.value?.click();
+};
+
+const handleImageSelect = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  if (target.files && target.files[0]) {
+    newImageFile.value = target.files[0];
+  }
+};
+
+const saveEdit = () => {
+  if (!props.record || !props.workoutId) return;
+
+  emit("edit", {
+    workoutId: props.workoutId,
+    note: editedNote.value !== props.record.note ? editedNote.value : undefined,
+    file: newImageFile.value || undefined,
+    oldImageUrl: props.record.imageUrl,
+  });
+
+  cancelEdit();
+  emit("close");
+};
+
+const handleDelete = () => {
+  if (!props.workoutId) return;
+
+  if (confirm("Delete this workout? Streaks will be recalculated.")) {
+    emit("delete", props.workoutId);
+    emit("close");
+  }
 };
 </script>
 
@@ -217,5 +333,123 @@ const formatTime = (dateString: string) => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* ========== Action Buttons ========== */
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.action-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.edit-button {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.edit-button:hover {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+.delete-button {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.delete-button:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+}
+
+/* ========== Edit Form ========== */
+.modal-edit-form {
+  margin-top: 1rem;
+}
+
+.edit-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 0.75rem;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  background-color: rgba(39, 39, 42, 0.5);
+  color: #e4e4e7;
+  font-size: 0.875rem;
+  resize: vertical;
+  backdrop-filter: blur(4px);
+  margin-bottom: 0.75rem;
+}
+
+.edit-textarea::placeholder {
+  color: #a1a1aa;
+}
+
+.edit-textarea:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.edit-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.edit-primary-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.edit-action-button {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.edit-action-button.primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.edit-action-button.primary:hover {
+  background-color: #2563eb;
+}
+
+.edit-action-button.secondary {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.edit-action-button.secondary:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.new-image-indicator {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #a1a1aa;
+  text-align: center;
+}
+
+.hidden {
+  display: none;
 }
 </style>

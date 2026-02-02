@@ -7,7 +7,10 @@ import {
   collection,
   doc,
   getDocs,
+  getDoc,
   setDoc,
+  updateDoc,
+  deleteDoc,
   query,
   where,
   orderBy,
@@ -74,23 +77,25 @@ export async function getUserWorkouts(
  * @param squadId - Squad ID
  * @param imageUrl - Workout image URL
  * @param note - Note (optional)
+ * @param date - Check-in date (optional, defaults to today)
  * @returns Workout ID
  */
 export async function createWorkoutRecord(
   userId: string,
   squadId: string,
   imageUrl: string,
-  note?: string
+  note?: string,
+  date?: string
 ): Promise<string> {
   const workoutsRef = collection(db, "workouts");
   const workoutDoc = doc(workoutsRef);
-  const today = getTodayString();
+  const checkInDate = date || getTodayString();
 
   const workoutData: WorkoutDocument = {
     id: workoutDoc.id,
     userId,
     squadId,
-    date: today,
+    date: checkInDate,
     completedAt: Timestamp.now(),
     imageUrl,
     note: note || "",
@@ -103,14 +108,66 @@ export async function createWorkoutRecord(
 }
 
 /**
- * Delete workout
- * Note: This operation should also update related statistics
+ * Get workout by ID
+ *
+ * @param workoutId - Workout ID
+ * @returns Workout document or null if not found
  */
-export async function deleteWorkout(workoutId: string): Promise<void> {
+export async function getWorkoutById(
+  workoutId: string
+): Promise<WorkoutDocument | null> {
   const workoutRef = doc(db, "workouts", workoutId);
-  // TODO: Implement delete logic, including updating statistics
-  // await deleteDoc(workoutRef);
-  throw new Error("Delete workout not implemented yet");
+  const workoutSnap = await getDoc(workoutRef);
+
+  if (workoutSnap.exists()) {
+    return workoutSnap.data() as WorkoutDocument;
+  }
+  return null;
+}
+
+/**
+ * Update workout record
+ * Only allows updating imageUrl and note
+ *
+ * @param workoutId - Workout ID
+ * @param updates - Fields to update (imageUrl and/or note)
+ */
+export async function updateWorkout(
+  workoutId: string,
+  updates: { imageUrl?: string; note?: string }
+): Promise<void> {
+  const workoutRef = doc(db, "workouts", workoutId);
+  await updateDoc(workoutRef, {
+    ...updates,
+    updatedAt: Timestamp.now(),
+  });
+}
+
+/**
+ * Delete workout
+ * Returns the workout data before deletion for cleanup operations
+ *
+ * @param workoutId - Workout ID
+ * @returns Workout document before deletion
+ * @throws Error if workout not found
+ */
+export async function deleteWorkout(
+  workoutId: string
+): Promise<WorkoutDocument> {
+  const workoutRef = doc(db, "workouts", workoutId);
+
+  // Fetch workout to get metadata
+  const workoutSnap = await getDoc(workoutRef);
+  if (!workoutSnap.exists()) {
+    throw new Error(`Workout ${workoutId} not found`);
+  }
+
+  const workoutData = workoutSnap.data() as WorkoutDocument;
+
+  // Delete workout document
+  await deleteDoc(workoutRef);
+
+  return workoutData;
 }
 
 /**

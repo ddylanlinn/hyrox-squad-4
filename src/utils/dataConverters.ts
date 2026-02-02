@@ -41,6 +41,7 @@ export function convertWorkoutDocumentToRecord(
   workout: WorkoutDocument
 ): WorkoutRecord {
   return {
+    id: workout.id,
     userId: workout.userId,
     completedAt: workout.completedAt.toDate().toISOString(),
     imageUrl: workout.imageUrl,

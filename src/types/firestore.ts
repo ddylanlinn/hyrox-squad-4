@@ -145,6 +145,7 @@ export interface WorkoutDocument {
   imageUrl: string;
   note?: string;
   createdAt: Timestamp;
+  updatedAt?: Timestamp; // Added for edit tracking
 
   // Optional fields
   missionId?: string;

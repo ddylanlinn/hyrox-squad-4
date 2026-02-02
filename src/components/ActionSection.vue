@@ -58,7 +58,7 @@
           <h2 class="modal-title">Ready to check in?</h2>
 
           <!-- Note Input Card (Moved from main UI) -->
-          <div class="note-card rounded-2xl p-5 mb-8">
+          <div class="note-card rounded-2xl p-5 mb-4">
             <label class="block text-xs font-bold text-tertiary uppercase mb-3">
               Today's Workout
             </label>
@@ -69,6 +69,27 @@
               :placeholder="WORKOUT_PLACEHOLDER"
               @keyup.enter="handleConfirm"
             />
+          </div>
+
+          <!-- Past Date Check-in Option -->
+          <div class="past-date-section mb-8">
+            <label class="past-date-toggle">
+              <input
+                v-model="enablePastDate"
+                type="checkbox"
+                class="past-date-checkbox"
+              />
+              <span class="past-date-label">Check in for a past date?</span>
+            </label>
+
+            <div v-if="enablePastDate" class="past-date-picker mt-3">
+              <input
+                v-model="selectedDate"
+                type="date"
+                :max="getTodayString()"
+                class="date-input"
+              />
+            </div>
           </div>
 
           <button @click="handleConfirm" class="checkin-button">
@@ -101,7 +122,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  "check-in": [data: { file: File; note: string }];
+  "check-in": [data: { file: File; note: string; date?: string }];
 }>();
 
 const fileInputRef = ref<HTMLInputElement | null>(null);
@@ -109,6 +130,12 @@ const fileInputRef = ref<HTMLInputElement | null>(null);
 const copied = ref(false);
 const noteContent = ref("");
 const showModal = ref(false);
+const enablePastDate = ref(false);
+const selectedDate = ref("");
+
+const getTodayString = (): string => {
+  return new Date().toISOString().split("T")[0];
+};
 
 const handleCheckInClick = () => {
   showModal.value = true;
@@ -116,6 +143,8 @@ const handleCheckInClick = () => {
 
 const closeModal = () => {
   showModal.value = false;
+  enablePastDate.value = false;
+  selectedDate.value = "";
 };
 
 const handleConfirm = () => {
@@ -128,10 +157,13 @@ const handleFileChange = (e: Event) => {
     emit("check-in", {
       file: target.files[0],
       note: noteContent.value || DEFAULT_WORKOUT_NOTE,
+      date: enablePastDate.value && selectedDate.value ? selectedDate.value : undefined,
     });
     // Clear state
     noteContent.value = "";
     showModal.value = false;
+    enablePastDate.value = false;
+    selectedDate.value = "";
     // Clear file input
     target.value = "";
   }
@@ -326,5 +358,62 @@ const handleNudge = () => {
 
 .text-tertiary {
   color: var(--color-text-tertiary);
+}
+
+/* ========== Past Date Section ========== */
+.past-date-section {
+  border-top: 1px solid var(--color-border);
+  padding-top: 1rem;
+}
+
+.past-date-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.past-date-checkbox {
+  width: 1.125rem;
+  height: 1.125rem;
+  cursor: pointer;
+}
+
+.past-date-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.past-date-picker {
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.date-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid var(--color-border);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  background-color: white;
+  transition: border-color 0.2s;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: var(--color-action-input-focus);
 }
 </style>

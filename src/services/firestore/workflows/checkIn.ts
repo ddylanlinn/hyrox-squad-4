@@ -33,6 +33,7 @@ export interface CheckInInput {
   squadId: string;
   imageUrl: string;
   note?: string;
+  date?: string; // Optional date for past check-ins (YYYY-MM-DD)
 }
 
 /**
@@ -50,45 +51,71 @@ export interface CheckInResult {
  * Execute complete check-in workflow
  *
  * This function orchestrates:
- * 1. Validate not already checked in today
- * 2. Create workout record
- * 3. Update user daily stats
- * 4. Calculate and update personal streak
- * 5. Calculate and update squad streak
+ * 1. Validate date format and not in future
+ * 2. Validate not already checked in for the specified date
+ * 3. Create workout record
+ * 4. Update user daily stats
+ * 5. Calculate and update personal streak
+ * 6. Calculate and update squad streak
  *
  * @param input - Check-in input data
  * @returns Check-in result with all updated streaks
- * @throws Error if user has already checked in today
+ * @throws Error if date is invalid or user has already checked in
  */
 export async function executeCheckIn(
   input: CheckInInput
 ): Promise<CheckInResult> {
-  const { userId, squadId, imageUrl, note } = input;
-  const today = getTodayString();
+  const { userId, squadId, imageUrl, note, date } = input;
+  const checkInDate = date || getTodayString();
 
-  // Step 0: Pre-check - Has user already checked in today?
-  const existingStats = await getUserStatsByDate(userId, today);
+  // Step 0: Validate date
+  // Validate format (YYYY-MM-DD)
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(checkInDate)) {
+    throw new Error("Invalid date format. Use YYYY-MM-DD");
+  }
+
+  // Validate not in future
+  const today = getTodayString();
+  if (checkInDate > today) {
+    throw new Error("Cannot check in for a future date");
+  }
+
+  // Pre-check - Has user already checked in for this date?
+  const existingStats = await getUserStatsByDate(userId, checkInDate);
   if (existingStats && existingStats.count > 0) {
-    throw new Error("You have already checked in today");
+    throw new Error(`You have already checked in on ${checkInDate}`);
   }
 
   // Step 1: Create workout record
-  const workoutId = await createWorkoutRecord(userId, squadId, imageUrl, note);
-  console.log(`Created workout: ${workoutId}`);
+  const workoutId = await createWorkoutRecord(
+    userId,
+    squadId,
+    imageUrl,
+    note,
+    checkInDate
+  );
+  console.log(`Created workout: ${workoutId} for date: ${checkInDate}`);
 
   // Step 2: Update user daily stats
-  await updateUserDailyStats(userId, today, workoutId);
-  console.log(`Updated daily stats for user: ${userId}`);
+  await updateUserDailyStats(userId, checkInDate, workoutId);
+  console.log(`Updated daily stats for user: ${userId} on ${checkInDate}`);
 
   // Step 3: Calculate and update personal streak
-  const { personalStreak, longestStreak } = await refreshPersonalStreak(userId);
+  const { personalStreak, longestStreak } = await refreshPersonalStreak(
+    userId,
+    checkInDate
+  );
   console.log(`Updated user ${userId} streak:`, {
     personalStreak,
     longestStreak,
   });
 
   // Step 4: Calculate and update squad streak
-  const { squadStreak, squadAverageStreak } = await refreshSquadStreak(squadId);
+  const { squadStreak, squadAverageStreak } = await refreshSquadStreak(
+    squadId,
+    checkInDate
+  );
   console.log(`Updated squad ${squadId} streak:`, {
     squadStreak,
     squadAverageStreak,
@@ -119,20 +146,25 @@ export async function executeCheckIn(
 /**
  * Refresh personal streak for a user
  * Recalculates and persists the current and longest streak
+ *
+ * @param userId - User ID
+ * @param checkInDate - The date being checked in (for eventual consistency handling)
  */
-async function refreshPersonalStreak(userId: string): Promise<{
+async function refreshPersonalStreak(
+  userId: string,
+  checkInDate: string
+): Promise<{
   personalStreak: number;
   longestStreak: number;
 }> {
   const userStats = await getUserStats(userId);
-  const todayString = getTodayString();
 
-  // Optimization: If userStats doesn't have today yet (eventual consistency), add it
+  // Optimization: If userStats doesn't have the check-in date yet (eventual consistency), add it
   // This ensures calculateStreak sees the workout that was just created
-  const hasToday = userStats.some((s) => s.date === todayString);
-  if (!hasToday) {
+  const hasCheckInDate = userStats.some((s) => s.date === checkInDate);
+  if (!hasCheckInDate) {
     userStats.unshift({
-      date: todayString,
+      date: checkInDate,
       userId,
       count: 1,
       workoutIds: [], // Not needed for calculation
@@ -157,8 +189,14 @@ async function refreshPersonalStreak(userId: string): Promise<{
 /**
  * Refresh squad streak
  * Recalculates and persists squad current and average streak
+ *
+ * @param squadId - Squad ID
+ * @param checkInDate - The date being checked in (for eventual consistency handling)
  */
-async function refreshSquadStreak(squadId: string): Promise<{
+async function refreshSquadStreak(
+  squadId: string,
+  checkInDate: string
+): Promise<{
   squadStreak: number;
   squadAverageStreak: number;
 }> {
@@ -187,19 +225,18 @@ async function refreshSquadStreak(squadId: string): Promise<{
 
   // Get bound members' stats only
   const memberStatsMap = new Map<string, UserDailyStats[]>();
-  const todayString = getTodayString();
 
   for (const memberId of boundMemberIds) {
     const stats = await getUserStats(memberId);
 
-    // Optimization: Ensure today is reflected for all bound members if they just checked in
+    // Optimization: Ensure check-in date is reflected for all bound members if they just checked in
     // This handles eventual consistency where getDocs might not see the latest write yet
-    const hasToday = stats.some((s) => s.date === todayString);
-    if (!hasToday) {
-      // We check today's stats specifically for this member to be sure
-      const todayStats = await getUserStatsByDate(memberId, todayString);
-      if (todayStats && todayStats.count > 0) {
-        stats.unshift(todayStats);
+    const hasCheckInDate = stats.some((s) => s.date === checkInDate);
+    if (!hasCheckInDate) {
+      // We check the specific date's stats for this member to be sure
+      const dateStats = await getUserStatsByDate(memberId, checkInDate);
+      if (dateStats && dateStats.count > 0) {
+        stats.unshift(dateStats);
       }
     }
 

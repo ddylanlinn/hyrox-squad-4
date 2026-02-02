@@ -15,6 +15,14 @@ export {
   type CheckInResult,
 } from "./workflows/checkIn";
 
+export {
+  executeEditWorkout,
+  executeDeleteWorkout,
+  type EditWorkoutInput,
+  type DeleteWorkoutInput,
+  type DeleteWorkoutResult,
+} from "./workflows/editWorkout";
+
 // ============================================================
 // Aggregators (Data fetching)
 // ============================================================

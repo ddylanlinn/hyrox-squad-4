@@ -61,7 +61,11 @@
         :isOpen="modalOpen"
         :record="selectedRecord"
         :user="selectedUser"
+        :workoutId="selectedRecord?.id"
+        :currentUserId="appUserId"
         @close="modalOpen = false"
+        @edit="handleEditWorkout"
+        @delete="handleDeleteWorkout"
       />
     </template>
   </div>
@@ -106,7 +110,12 @@ const {
 });
 
 // Workout
-const { uploading, handleCheckIn: checkIn } = useWorkout({
+const {
+  uploading,
+  handleCheckIn: checkIn,
+  handleEditWorkout: editWorkout,
+  handleDeleteWorkout: deleteWorkout,
+} = useWorkout({
   appUserId,
   squadId: CURRENT_SQUAD_ID,
   waitForUpdate: waitForCheckInUpdate,
@@ -134,7 +143,11 @@ onMounted(async () => {
 });
 
 // Handlers
-const handleCheckIn = async (data: { file: File; note: string }) => {
+const handleCheckIn = async (data: {
+  file: File;
+  note: string;
+  date?: string;
+}) => {
   try {
     await checkIn(data);
   } catch (err) {
@@ -142,6 +155,33 @@ const handleCheckIn = async (data: { file: File; note: string }) => {
       err instanceof Error
         ? err.message
         : "Check-in failed, please try again later";
+    alert(errorMessage);
+  }
+};
+
+const handleEditWorkout = async (data: {
+  workoutId: string;
+  note?: string;
+  file?: File;
+  oldImageUrl: string;
+}) => {
+  try {
+    await editWorkout(data);
+  } catch (err) {
+    const errorMessage =
+      err instanceof Error ? err.message : "Edit failed, please try again later";
+    alert(errorMessage);
+  }
+};
+
+const handleDeleteWorkout = async (workoutId: string) => {
+  try {
+    await deleteWorkout(workoutId);
+  } catch (err) {
+    const errorMessage =
+      err instanceof Error
+        ? err.message
+        : "Delete failed, please try again later";
     alert(errorMessage);
   }
 };

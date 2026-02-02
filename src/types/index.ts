@@ -6,6 +6,7 @@ export interface User {
 }
 
 export interface WorkoutRecord {
+  id: string; // Workout document ID
   userId: string;
   completedAt: string; // ISO string
   imageUrl: string;

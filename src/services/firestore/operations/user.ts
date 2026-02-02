@@ -10,6 +10,7 @@ import {
   getDocs,
   setDoc,
   updateDoc,
+  arrayRemove,
   query,
   orderBy,
   limit,
@@ -134,4 +135,35 @@ export async function updateUserDailyStats(
     };
     await setDoc(statsRef, newStats);
   }
+}
+
+/**
+ * Decrement user daily stats
+ * Used when deleting a workout
+ *
+ * @param userId - User ID
+ * @param date - Date in YYYY-MM-DD format
+ * @param workoutId - Workout ID to remove
+ */
+export async function decrementUserDailyStats(
+  userId: string,
+  date: string,
+  workoutId: string
+): Promise<void> {
+  const statsRef = doc(db, "users", userId, "stats", date);
+  const statsSnap = await getDoc(statsRef);
+
+  if (!statsSnap.exists()) {
+    console.warn(`No stats found for user ${userId} on date ${date}`);
+    return;
+  }
+
+  const currentData = statsSnap.data() as UserDailyStats;
+  const newCount = Math.max(0, currentData.count - 1);
+
+  await updateDoc(statsRef, {
+    count: newCount,
+    workoutIds: arrayRemove(workoutId),
+    updatedAt: Timestamp.now(),
+  });
 }
