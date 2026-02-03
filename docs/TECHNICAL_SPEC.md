@@ -31,9 +31,10 @@
 
 ### 核心功能
 
-- ✅ **Check-in 打卡**：上傳訓練照片和內容描述
+- ✅ **Check-in 打卡**：上傳訓練照片和內容描述（支援過去日期補打卡）
 - ✅ **進度儀表板**：即時顯示團隊完成進度（0-100%）
-- ✅ **Heatmap 熱力圖**：80 天訓練歷史可視化
+- ✅ **Heatmap 互動熱力圖**：80 天歷史可視化，支援點擊查看詳情或開起補打卡
+- ✅ **編輯與刪除**：使用者可對自己的訓練記錄進行修正或刪除（自動回溯統計與 Streak）
 - ✅ **Streak 追蹤**：團隊連續打卡天數計算
 - ✅ **使用者綁定**：Firebase Auth 與應用使用者綁定機制
 - ✅ **照片預覽**：點擊頭像查看完整訓練照片
@@ -208,6 +209,7 @@ flowchart TB
 | `imageUrl`    | string    | ✅   | 照片 URL              |
 | `note`        | string    | ❌   | 訓練內容描述          |
 | `createdAt`   | Timestamp | ✅   | 建立時間              |
+| `updatedAt`   | Timestamp | ❌   | 更新時間 (編輯時新增) |
 | `missionId`   | string    | ❌   | 任務 ID (預留擴充)    |
 
 ---
@@ -359,6 +361,17 @@ sequenceDiagram
   - 點擊後複製激勵訊息到剪貼簿
   - 按鈕文字短暫變為 `"COPIED!"`（2 秒後恢復）
   - 下方顯示提示文字：`"Great work! Now motivate the others."`
+- **Add Past Workout 按鈕**：
+  - 位於「已打卡」狀態下方
+  - 用途：快速啟動過往日期的打卡流程
+  - 行為：開啟 Modal 並自動啟用日期選擇器
+
+**4. 補打卡模式 (Past-date Mode)**
+
+- 當從 Heatmap 空白格或「Add Past Workout」發起時啟用
+- 顯示「Workout Date」選擇器（限選今天以前）
+- 提交後會自動更新對應日期的統計與 Streak
+- 移除原本的手動勾選選項，改由上下文自動判斷介面顯示內容
 
 #### 檔案上傳規格
 
@@ -485,6 +498,18 @@ stateDiagram-v2
   - 完成時間（格式：YYYY/MM/DD HH:mm，帶 Clock icon）
   - 訓練內容描述（note，若有則顯示 Quote 區塊）
 
+**4. 編輯與刪除權限**
+
+- 若該紀錄屬於當前使用者，下方顯示「Edit」與「Delete」按鈕
+- **Edit 模式**：
+  - 點擊後內容變為輸入框
+  - 支援更換照片、修改備註
+  - 保存後呼叫 `executeEditWorkout`，舊照片將從 Storage 自動移除
+- **Delete 模式**：
+  - 彈出確認視窗
+  - 執行 `executeDeleteWorkout`（Transaction）
+  - 同步刪除資料庫文件、遞減統計、刪除 Storage 圖片並重算 Streak
+
 **3. 關閉按鈕**
 
 - 位置：右上角（absolute 定位）
@@ -578,6 +603,14 @@ flowchart TB
   - 陰影：`box-shadow: hover:shadow-md`
   - Z-index 提升：`hover:z-10`
 - transition: all 0.3s
+
+**5. 互動規格**
+
+- **點擊行為**：
+  - **已紀錄格**：開啟 PhotoModal 查看該日記錄（若有多筆，優先顯示自己的，否則顯示第一筆）
+  - **空白格**：開啟 ActionSection 打卡彈窗，並自動帶入該格日期
+- **視覺反馈**：
+  - 游標懸停顯示 `cursor: pointer`
 
 ---
 
@@ -1104,4 +1137,33 @@ docs/
 - UI 層：Dashboard 載入行為
 - 不影響資料邏輯或 Firestore schema
 
----
+### 2026-02-02 - 活動編輯、刪除與補打卡功能
+
+**變更原因**：提升訓練記錄的靈活性，允許修正錯誤紀錄並補登過往活動。
+
+**改動內容**：
+- **新增 Workflow** `editWorkout.ts`
+  - 實現 `executeEditWorkout`: 支援備註與圖片更新，包含 Storage 舊圖清理。
+  - 實現 `executeDeleteWorkout`: 採用 **Firestore Transaction** 確保刪除記錄、遞減統計、更新總次數的原子性。同步觸發 Streak 重新計算。
+- **修改組件** `PhotoModal.vue` / `ActionSection.vue`
+  - PhotoModal 新增 Edit/Delete 操作介面。
+  - ActionSection 支援 `date` 參數進行補打卡。
+- **資料模型變更**
+  - `WorkoutDocument` 新增 `updatedAt` 欄位。
+
+### 2026-02-03 - 互動式 Heatmap 與介面優化
+
+**變更原因**：增強歷史數據的可存取性，優化補打卡流程。
+
+**改動內容**：
+- **互動式 Heatmap**
+  - 點擊色塊：直接查看當天訓練詳情。
+  - 點擊空格：快速發起該日期的補打卡。
+- **介面流程優化**
+  - 移除手動勾選「Check in for a past date?」，改由點擊位置自動判斷。
+  - 新增「Add Past Workout」按鈕於已打卡狀態下。
+  - 儀表板數據聚合優化，確保 Heatmap 資料包含必要的 Workout 連結。
+
+**影響範圍**：
+- `Dashboard.vue`, `HistoryHeatmap.vue`, `ActionSection.vue`
+- `aggregators/dashboard.ts` (新增記錄聚合邏輯)

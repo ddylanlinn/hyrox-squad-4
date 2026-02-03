@@ -4,13 +4,14 @@ A workout tracking app for Hyrox training built with Vue, TypeScript, and Vite.
 
 ## Features
 
-- 🗓️ **Training History Heatmap** - 80-day workout visualization like GitHub contributions
-- 🔥 **Streak Tracking** - Track team consecutive check-in days
-- 📊 **Team Progress Dashboard** - Real-time progress ring showing team completion (0-100%)
-- 📸 **Photo Check-in** - Upload workout photos with descriptions
+- 🗓️ **Interactive Heatmap** - Clickable 80-day workout history to view details or add past entries
+- 🔥 **Streak Tracking** - Track team consecutive check-in days with auto-recalculation
+- 📊 **Team Progress Dashboard** - Real-time progress ring and squad status
+- 📸 **Photo Check-in** - Upload workout photos (supports multiple daily entries and past dates)
+- ✏️ **Edit & Delete** - Fix mistakes or remove entries (includes automatic stat/streak reversal)
 - 👥 **User Binding** - Link Firebase Auth to app users
 - 🔐 **Secure Authentication** - Google Sign-In & Email/Password login
-- ☁️ **Firebase Backend** - Auth, Firestore Database, and Storage
+- ☁️ **Firebase Backend** - Auth, Firestore (Transactions enabled), and Storage
 
 ## Tech Stack
 
@@ -79,6 +80,10 @@ src/
 ├── services/           # Business logic
 │   ├── auth/                  # Auth services
 │   ├── firestore/             # Firestore operations
+│   │   ├── aggregators/       # Data aggregation (e.g., Dashboard stats)
+│   │   ├── calculators/       # Pure logic (Streak calculation)
+│   │   ├── operations/        # CRUD operations
+│   │   └── workflows/         # Complex business flows (Edit/Delete Workout)
 │   └── storage/               # Storage operations
 ├── types/              # TypeScript definitions
 ├── constants/          # App constants

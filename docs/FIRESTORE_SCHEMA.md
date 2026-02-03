@@ -83,13 +83,39 @@ const q = query(
 
 **需要索引**: `squadId (ASC) + date (ASC)`
 
-**3. Transaction 範例（確保原子性）**
+**3. Transaction 範例（刪除 Workout 並回溯統計）**
 
 ```typescript
 await runTransaction(db, async (tx) => {
-  tx.set(workoutRef, workoutData);
-  tx.update(statsRef, { count: increment(1) });
-  tx.update(squadRef, { totalWorkouts: increment(1) });
+  // 1. 刪除訓練記錄
+  tx.delete(workoutRef);
+  
+  // 2. 遞減使用者與團隊總次數
+  tx.update(userRef, { 
+    totalWorkouts: increment(-1),
+    updatedAt: serverTimestamp() 
+  });
+  tx.update(squadRef, { 
+    totalWorkouts: increment(-1),
+    updatedAt: serverTimestamp() 
+  });
+  
+  // 3. 更新每日統計並移除記錄 ID
+  tx.update(statsRef, {
+    count: increment(-1),
+    workoutIds: arrayRemove(workoutId),
+    updatedAt: serverTimestamp()
+  });
+});
+```
+
+**4. 編輯 Workout**
+
+```typescript
+await updateDoc(workoutRef, {
+  imageUrl: newImageUrl, // 如果有更換照片
+  note: newNote,
+  updatedAt: serverTimestamp()
 });
 ```
 
