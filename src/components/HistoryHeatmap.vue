@@ -126,10 +126,11 @@
           v-for="(day, index) in displayHistory"
           :key="day.date"
           :class="[
-            'aspect-square rounded-sm transition-all duration-300 hover:scale-110 hover:z-10 hover:shadow-md relative',
+            'aspect-square rounded-sm transition-all duration-300 hover:scale-110 hover:z-10 hover:shadow-md relative cursor-pointer',
             getColorClass(day.count),
             isToday(day.date) ? 'today-ring' : '',
           ]"
+          @click="emit('select-day', day)"
         >
           <div
             v-show="index === displayHistory.length - 1"
@@ -158,6 +159,10 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const emit = defineEmits<{
+  "select-day": [day: DailyStats];
+}>();
 
 const showTooltip = ref(false);
 const showStreakTooltip = ref(false);

@@ -39,6 +39,7 @@
         :todayCount="todaysRecords.length"
         :streak="streak"
         :personalStreak="personalStreak"
+        @select-day="handleHeatmapDayClick"
       />
 
       <!-- Section B: Energy -->
@@ -50,6 +51,7 @@
 
       <!-- Section C: Action -->
       <ActionSection
+        ref="actionSectionRef"
         :isCompleted="isCompleted"
         :completedCount="todaysRecords.length"
         :uploading="uploading"
@@ -125,6 +127,7 @@ const {
 // Modal State
 const modalOpen = ref(false);
 const selectedRecord = ref<WorkoutRecord | null>(null);
+const actionSectionRef = ref<any>(null);
 
 // Computed
 const currentUserRecord = computed(() =>
@@ -189,6 +192,24 @@ const handleDeleteWorkout = async (workoutId: string) => {
 const handleAvatarClick = (record: WorkoutRecord) => {
   selectedRecord.value = record;
   modalOpen.value = true;
+};
+
+const handleHeatmapDayClick = (day: any) => {
+  if (!day.records || day.records.length === 0) {
+    // If empty day, open check-in modal for that date
+    actionSectionRef.value?.openModal(day.date);
+    return;
+  }
+
+  // Try to find current user's record first
+  const myRecord = day.records.find((r: any) => r.userId === appUserId.value);
+
+  if (myRecord) {
+    handleAvatarClick(myRecord);
+  } else {
+    // Otherwise show the first record from the squad
+    handleAvatarClick(day.records[0]);
+  }
 };
 
 const handleSignOut = async () => {

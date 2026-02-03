@@ -30,7 +30,7 @@ export function convertTeamDailyStatsToHistory(
   return stats.map((stat) => ({
     date: stat.date,
     count: stat.count, // 0-4 (number of members who completed)
-    records: [], // Detailed records not needed in history view
+    records: stat.records.map(convertWorkoutDocumentToRecord),
   }));
 }
 

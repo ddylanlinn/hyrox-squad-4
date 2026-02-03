@@ -3,9 +3,12 @@
  * Aggregates multiple data sources to provide complete dashboard data
  */
 
-import { getSquad, getSquadMembers } from "../operations/squad";
+import {
+  getSquad,
+  getSquadMembers,
+} from "../operations/squad";
 import { getUser, getUserStats } from "../operations/user";
-import { getTodayWorkouts } from "../operations/workout";
+import { getTodayWorkouts, getRecentWorkouts } from "../operations/workout";
 import type {
   SquadDocument,
   SquadMemberDocument,
@@ -22,6 +25,7 @@ export interface TeamDailyStats {
   date: string; // YYYY-MM-DD
   count: number; // 0-4 (number of members who completed)
   memberIds: string[]; // IDs of members who completed
+  records: WorkoutDocument[]; // Added: actual workout documents
 }
 
 /**
@@ -42,7 +46,8 @@ export interface DashboardData {
  * Per TECHNICAL_SPEC.md L549-555: count = number of members completed (0-4)
  */
 function aggregateTeamStats(
-  memberStatsMap: Map<string, UserDailyStats[]>
+  memberStatsMap: Map<string, UserDailyStats[]>,
+  workoutsByDate: Map<string, WorkoutDocument[]>
 ): TeamDailyStats[] {
   // Build a map of date -> memberIds who completed
   const dateMap = new Map<string, Set<string>>();
@@ -65,6 +70,7 @@ function aggregateTeamStats(
       date,
       count: memberIds.size,
       memberIds: Array.from(memberIds),
+      records: workoutsByDate.get(date) || [],
     });
   }
 
@@ -87,12 +93,13 @@ export async function getDashboardData(
   squadId: string,
   statsDays: number = 80
 ): Promise<DashboardData> {
-  // Step 1: Get squad and members
-  const [squad, members, user, todayWorkouts] = await Promise.all([
+  // Step 1: Get squad, members, workouts
+  const [squad, members, user, todayWorkouts, workoutsByDate] = await Promise.all([
     getSquad(squadId),
     getSquadMembers(squadId),
     getUser(userId),
     getTodayWorkouts(squadId),
+    getRecentWorkouts(squadId, statsDays),
   ]);
 
   // Step 2: Get all members' stats for team history
@@ -119,7 +126,7 @@ export async function getDashboardData(
   }
 
   // Step 3: Aggregate team stats for Heatmap
-  const teamHistory = aggregateTeamStats(memberStatsMap);
+  const teamHistory = aggregateTeamStats(memberStatsMap, workoutsByDate);
 
   return {
     squad,

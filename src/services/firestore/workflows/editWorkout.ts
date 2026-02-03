@@ -8,6 +8,13 @@
  */
 
 import {
+  runTransaction,
+  doc,
+  arrayRemove,
+  Timestamp,
+} from "firebase/firestore";
+import { db } from "../../../config/firebase";
+import {
   getWorkoutById,
   updateWorkout,
   deleteWorkout,
@@ -15,9 +22,7 @@ import {
 import {
   getUser,
   getUserStats,
-  decrementUserDailyStats,
   updateUserStreak,
-  updateUser,
 } from "../operations/user";
 import { getSquad, updateSquad } from "../operations/squad";
 import {
@@ -27,7 +32,7 @@ import {
 } from "../calculators/streak";
 import { getBoundMemberIds } from "../../auth/binding";
 import { deleteWorkoutImage } from "../../storage";
-import type { UserDailyStats } from "../../../types/firestore";
+import type { UserDailyStats, WorkoutDocument } from "../../../types/firestore";
 
 /**
  * Input for edit workout workflow
@@ -111,10 +116,8 @@ export interface DeleteWorkoutResult {
  * This function orchestrates:
  * 1. Validate workout belongs to userId
  * 2. Delete workout image from Storage
- * 3. Delete workout document
- * 4. Decrement user daily stats
- * 5. Decrement user/squad totalWorkouts
- * 6. Recalculate personal & squad streaks
+ * 3. Update all counters and delete documents in a single Transaction
+ * 4. Recalculate streaks (post-transaction)
  *
  * @param input - Delete workout input data
  * @returns New streak values after deletion
@@ -125,7 +128,7 @@ export async function executeDeleteWorkout(
 ): Promise<DeleteWorkoutResult> {
   const { workoutId, userId, squadId } = input;
 
-  // Step 1: Validate workout belongs to user
+  // Step 1: Validate workout belongs to user (Pre-check)
   const workout = await getWorkoutById(workoutId);
   if (!workout) {
     throw new Error(`Workout ${workoutId} not found`);
@@ -136,6 +139,8 @@ export async function executeDeleteWorkout(
   }
 
   // Step 2: Delete workout image from Storage
+  // We do this first because we can't roll back storage operations easily,
+  // but having an orphaned image is better than having a broken database state.
   try {
     await deleteWorkoutImage(workout.imageUrl);
     console.log(`Deleted workout image: ${workout.imageUrl}`);
@@ -144,38 +149,68 @@ export async function executeDeleteWorkout(
     // Continue with deletion even if image deletion fails
   }
 
-  // Step 3: Delete workout document
-  await deleteWorkout(workoutId);
-  console.log(`Deleted workout: ${workoutId}`);
+  // Step 3: Transactional Update
+  await runTransaction(db, async (transaction) => {
+    // Refs
+    const workoutRef = doc(db, "workouts", workoutId);
+    const userRef = doc(db, "users", userId);
+    const squadRef = doc(db, "squads", squadId);
+    const userDailyStatsRef = doc(db, "users", userId, "stats", workout.date);
 
-  // Step 4: Decrement user daily stats
-  await decrementUserDailyStats(userId, workout.date, workoutId);
-  console.log(`Decremented daily stats for user: ${userId} on ${workout.date}`);
+    // Reads
+    const workoutDoc = await transaction.get(workoutRef);
+    if (!workoutDoc.exists()) {
+      throw new Error(`Workout ${workoutId} does not exist!`);
+    }
 
-  // Step 5: Decrement user totalWorkouts
-  const user = await getUser(userId);
-  if (user && user.totalWorkouts && user.totalWorkouts > 0) {
-    const newTotalWorkouts = Math.max(0, user.totalWorkouts - 1);
-    await updateUser(userId, {
-      totalWorkouts: newTotalWorkouts,
+    const userDoc = await transaction.get(userRef);
+    if (!userDoc.exists()) {
+      throw new Error(`User ${userId} does not exist!`);
+    }
+
+    const squadDoc = await transaction.get(squadRef);
+    if (!squadDoc.exists()) {
+      throw new Error(`Squad ${squadId} does not exist!`);
+    }
+
+    const statsDoc = await transaction.get(userDailyStatsRef);
+
+    // Writes
+    // 1. Delete workout
+    transaction.delete(workoutRef);
+
+    // 2. Decrement user totalWorkouts
+    const currentTotalWorkouts = userDoc.data().totalWorkouts || 0;
+    transaction.update(userRef, {
+      totalWorkouts: Math.max(0, currentTotalWorkouts - 1),
+      updatedAt: Timestamp.now(),
     });
-    console.log(`Decremented user ${userId} totalWorkouts to ${newTotalWorkouts}`);
-  }
 
-  // Step 6: Decrement squad totalWorkouts
-  const squad = await getSquad(squadId);
-  if (squad && squad.totalWorkouts && squad.totalWorkouts > 0) {
-    await updateSquad(squadId, {
-      totalWorkouts: Math.max(0, squad.totalWorkouts - 1),
+    // 3. Decrement squad totalWorkouts
+    const currentSquadTotalWorkouts = squadDoc.data().totalWorkouts || 0;
+    transaction.update(squadRef, {
+      totalWorkouts: Math.max(0, currentSquadTotalWorkouts - 1),
+      updatedAt: Timestamp.now(),
     });
-    console.log(`Decremented squad ${squadId} totalWorkouts`);
-  }
 
-  // Step 7: Recalculate personal streak
+    // 4. Update daily stats
+    if (statsDoc.exists()) {
+      const currentCount = statsDoc.data().count || 0;
+      transaction.update(userDailyStatsRef, {
+        count: Math.max(0, currentCount - 1),
+        workoutIds: arrayRemove(workoutId),
+        updatedAt: Timestamp.now(),
+      });
+    }
+  });
+
+  console.log(`Transactional delete completed for workout: ${workoutId}`);
+
+  // Step 4: Recalculate streaks (Post-transaction)
+  // Streak calculation involves heavy reads and is not critical for data integrity
   const personalStreak = await recalculatePersonalStreak(userId);
   console.log(`Recalculated personal streak for ${userId}: ${personalStreak}`);
 
-  // Step 8: Recalculate squad streak
   const squadStreak = await recalculateSquadStreak(squadId);
   console.log(`Recalculated squad streak for ${squadId}: ${squadStreak}`);
 
@@ -229,13 +264,19 @@ async function recalculateSquadStreak(squadId: string): Promise<number> {
     return 0;
   }
 
-  // Get bound members' stats
+  // Get bound members' stats in PARALLEL
   const memberStatsMap = new Map<string, UserDailyStats[]>();
 
-  for (const memberId of boundMemberIds) {
+  const statsPromises = boundMemberIds.map(async (memberId) => {
     const stats = await getUserStats(memberId);
+    return { memberId, stats };
+  });
+
+  const results = await Promise.all(statsPromises);
+
+  results.forEach(({ memberId, stats }) => {
     memberStatsMap.set(memberId, stats);
-  }
+  });
 
   // Calculate streaks
   const squadStreak = calculateSquadStreak(memberStatsMap, boundMemberIds);

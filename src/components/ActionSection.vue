@@ -12,7 +12,7 @@
         @change="handleFileChange"
       />
       <button
-        @click="handleCheckInClick"
+        @click="openModal()"
         :disabled="uploading"
         class="checkin-button"
       >
@@ -25,11 +25,11 @@
         </template>
       </button>
     </div>
-    <div v-else class="sticky bottom-6">
+    <div v-else class="sticky bottom-6 flex flex-col items-center">
       <button
         @click="handleNudge"
         :class="[
-          'nudge-button',
+          'nudge-button mb-3',
           copied ? 'nudge-button-copied' : 'nudge-button-default',
         ]"
       >
@@ -42,7 +42,15 @@
           NUDGE SQUAD
         </template>
       </button>
-      <p class="text-center text-tertiary text-xs mt-3 font-medium">
+      
+      <button 
+        @click="openModal()" 
+        class="text-tertiary text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors flex items-center gap-1"
+      >
+        <Camera :size="14" /> Add Past Workout
+      </button>
+
+      <p class="text-center text-tertiary text-[10px] mt-2 font-medium">
         Great work! Now motivate the others.
       </p>
     </div>
@@ -71,18 +79,12 @@
             />
           </div>
 
-          <!-- Past Date Check-in Option -->
-          <div class="past-date-section mb-8">
-            <label class="past-date-toggle">
-              <input
-                v-model="enablePastDate"
-                type="checkbox"
-                class="past-date-checkbox"
-              />
-              <span class="past-date-label">Check in for a past date?</span>
+          <!-- Workout Date (Only shown for past check-ins) -->
+          <div v-if="enablePastDate" class="past-date-section mb-8">
+            <label class="block text-xs font-bold text-tertiary uppercase mb-3">
+              Workout Date
             </label>
-
-            <div v-if="enablePastDate" class="past-date-picker mt-3">
+            <div class="past-date-picker">
               <input
                 v-model="selectedDate"
                 type="date"
@@ -137,8 +139,19 @@ const getTodayString = (): string => {
   return new Date().toISOString().split("T")[0];
 };
 
-const handleCheckInClick = () => {
+const openModal = (date?: string) => {
   showModal.value = true;
+  if (date) {
+    enablePastDate.value = true;
+    selectedDate.value = date;
+  } else if (props.isCompleted) {
+    // If today is done, "Add Past Workout" button sets context to past date
+    enablePastDate.value = true;
+    selectedDate.value = getTodayString();
+  } else {
+    // Default today check-in
+    enablePastDate.value = false;
+  }
 };
 
 const closeModal = () => {
@@ -146,6 +159,10 @@ const closeModal = () => {
   enablePastDate.value = false;
   selectedDate.value = "";
 };
+
+defineExpose({
+  openModal,
+});
 
 const handleConfirm = () => {
   fileInputRef.value?.click();
